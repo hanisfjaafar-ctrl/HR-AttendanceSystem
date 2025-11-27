@@ -1,0 +1,1128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HR Attendance System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    /* (same CSS as before, unchanged) */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      font-family: 'Poppins', sans-serif;
+      overflow: hidden;
+    }
+    .container {
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .particles, .twinkling-stars {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .particle {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 50%;
+      animation: float 8s ease-in-out infinite;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+    .particle:nth-child(1) { width: 8px; height: 8px; top: 20%; left: 10%; animation-delay: 0s; }
+    .particle:nth-child(2) { width: 12px; height: 12px; top: 60%; left: 80%; animation-delay: 2s; }
+    .particle:nth-child(3) { width: 6px; height: 6px; top: 80%; left: 20%; animation-delay: 4s; }
+    .particle:nth-child(4) { width: 10px; height: 10px; top: 30%; left: 70%; animation-delay: 1s; }
+    .particle:nth-child(5) { width: 14px; height: 14px; top: 70%; left: 50%; animation-delay: 3s; }
+    .particle:nth-child(6) { width: 8px; height: 8px; top: 15%; left: 60%; animation-delay: 5s; }
+    .particle:nth-child(7) { width: 16px; height: 16px; top: 40%; left: 30%; animation-delay: 6s; }
+    .particle:nth-child(8) { width: 5px; height: 5px; top: 90%; left: 70%; animation-delay: 7s; }
+    .particle:nth-child(9) { width: 9px; height: 9px; top: 25%; left: 40%; animation-delay: 1s; }
+    .particle:nth-child(10) { width: 11px; height: 11px; top: 55%; left: 15%; animation-delay: 3s; }
+    .particle:nth-child(11) { width: 7px; height: 7px; top: 75%; left: 85%; animation-delay: 5s; }
+    .particle:nth-child(12) { width: 13px; height: 13px; top: 35%; left: 25%; animation-delay: 0s; }
+    .particle:nth-child(13) { width: 15px; height: 15px; top: 50%; left: 65%; animation-delay: 2s; }
+    .particle:nth-child(14) { width: 6px; height: 6px; top: 10%; left: 30%; animation-delay: 4s; }
+    .particle:nth-child(15) { width: 10px; height: 10px; top: 85%; left: 45%; animation-delay: 6s; }
+    .particle:nth-child(16) { width: 8px; height: 8px; top: 65%; left: 10%; animation-delay: 7s; }
+    .magical-orb {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(102, 126, 234, 0.6), rgba(118, 75, 162, 0.4));
+      box-shadow: 0 0 20px rgba(102, 126, 234, 0.6), 0 0 40px rgba(118, 75, 162, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.2);
+      animation: orbFloat 8s ease-in-out infinite;
+    }
+    .magical-orb::before {
+      content: '';
+      position: absolute;
+      top: 15%;
+      left: 20%;
+      width: 30%;
+      height: 30%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: orbGlow 3s ease-in-out infinite alternate;
+    }
+    .magical-orb::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 50%);
+      border-radius: 50%;
+      animation: orbAura 4s ease-in-out infinite;
+    }
+    .magical-orb:nth-child(17)  { width: 60px; height: 60px; top: 20%; left: 15%; animation-duration: 12s; }
+    .magical-orb:nth-child(18) { width: 45px; height: 45px; top: 70%; left: 80%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(56,239,125,0.6), rgba(17,153,142,0.4)); box-shadow: 0 0 20px rgba(56,239,125,0.6), 0 0 40px rgba(17,153,142,0.4), inset 0 0 20px rgba(255,255,255,0.2); animation-duration: 10s; }
+    .magical-orb:nth-child(19) { width: 35px; height: 35px; top: 40%; left: 70%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(239,68,68,0.6), rgba(220,38,127,0.4)); box-shadow: 0 0 20px rgba(239,68,68,0.6), 0 0 40px rgba(220,38,127,0.4), inset 0 0 20px rgba(255,255,255,0.2); animation-duration: 14s; }
+    .magical-orb:nth-child(20) { width: 25px; height: 25px; top: 60%; left: 25%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(168,85,247,0.6), rgba(147,51,234,0.4)); box-shadow: 0 0 15px rgba(168,85,247,0.6), 0 0 30px rgba(147,51,234,0.4), inset 0 0 15px rgba(255,255,255,0.2); animation-duration: 9s; }
+    .magical-orb:nth-child(21) { width: 40px; height: 40px; top: 15%; left: 60%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(59,130,246,0.6), rgba(37,99,235,0.4)); box-shadow: 0 0 20px rgba(59,130,246,0.6), 0 0 40px rgba(37,99,235,0.4), inset 0 0 20px rgba(255,255,255,0.2); animation-duration: 11s; }
+    .magical-orb:nth-child(22) { width: 30px; height: 30px; top: 80%; left: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(245,158,11,0.6), rgba(217,119,6,0.4)); box-shadow: 0 0 18px rgba(245,158,11,0.6), 0 0 35px rgba(217,119,6,0.4), inset 0 0 18px rgba(255,255,255,0.2); animation-duration: 13s; }
+    .magical-orb:nth-child(23) { width: 20px; height: 20px; top: 35%; left: 10%; animation-duration: 8s; }
+    .magical-orb:nth-child(24) { width: 18px; height: 18px; top: 55%; left: 85%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(236,72,153,0.6), rgba(219,39,119,0.4)); box-shadow: 0 0 12px rgba(236,72,153,0.6), 0 0 25px rgba(219,39,119,0.4), inset 0 0 12px rgba(255,255,255,0.2); animation-duration: 7s; }
+    .magical-orb:nth-child(25) { width: 22px; height: 22px; top: 25%; left: 40%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(16,185,129,0.6), rgba(5,150,105,0.4)); box-shadow: 0 0 14px rgba(16,185,129,0.6), 0 0 28px rgba(5,150,105,0.4), inset 0 0 14px rgba(255,255,255,0.2); animation-duration: 10s; }
+    .magical-orb:nth-child(26) { width: 28px; height: 28px; top: 75%; left: 15%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(139,92,246,0.6), rgba(124,58,237,0.4)); box-shadow: 0 0 16px rgba(139,92,246,0.6), 0 0 32px rgba(124,58,237,0.4), inset 0 0 16px rgba(255,255,255,0.2); animation-duration: 12s; }
+    .twinkling-star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 2s ease-in-out infinite alternate;
+    }
+    .twinkling-star:nth-child(1) { top: 15%; left: 20%; animation-delay: 0s; }
+    .twinkling-star:nth-child(2) { top: 25%; left: 80%; animation-delay: 0.5s; }
+    .twinkling-star:nth-child(3) { top: 45%; left: 15%; animation-delay: 1s; }
+    .twinkling-star:nth-child(4) { top: 65%; left: 85%; animation-delay: 1.5s; }
+    .twinkling-star:nth-child(5) { top: 85%; left: 25%; animation-delay: 2s; }
+    .twinkling-star:nth-child(6) { top: 35%; left: 90%; animation-delay: 0.3s; }
+    .twinkling-star:nth-child(7) { top: 75%; left: 10%; animation-delay: 0.8s; }
+    .twinkling-star:nth-child(8) { top: 55%; left: 60%; animation-delay: 1.3s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0) scale(1); opacity: 0.6; }
+      33% { transform: translateY(-30px) rotate(120deg) scale(1.1); opacity: 1; }
+      66% { transform: translateY(-15px) rotate(240deg) scale(0.9); opacity: 0.8; }
+    }
+    @keyframes orbFloat {
+      0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.8; }
+      25% { transform: translateY(-30px) translateX(20px) scale(1.1); opacity: 1; }
+      50% { transform: translateY(-10px) translateX(-15px) scale(0.9); opacity: 0.9; }
+      75% { transform: translateY(-40px) translateX(10px) scale(1.05); opacity: 1; }
+    }
+    @keyframes orbGlow { 0% { opacity: 0.6; transform: scale(1); } 100% { opacity: 1; transform: scale(1.3); } }
+    @keyframes orbAura { 0% { opacity: 0.3; transform: scale(1) rotate(0); } 50% { opacity: 0.1; transform: scale(1.2) rotate(180deg); } 100% { opacity: 0.3; transform: scale(1) rotate(360deg); } }
+    @keyframes twinkle { 0% { opacity: 0.3; transform: scale(1); } 100% { opacity: 1; transform: scale(1.5); } }
+
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2;
+    }
+    .screen.active { display: flex; }
+
+    .welcome-content {
+      text-align: center;
+      max-width: 600px;
+      padding: 0 20px;
+    }
+    .main-title {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 16px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .main-slogan {
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 40px;
+      font-weight: 400;
+    }
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    .main-btn {
+      padding: 16px;
+      border: none;
+      border-radius: 16px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      color: white;
+    }
+    .btn-face { background: linear-gradient(135deg, #ff6b6b, #ff8e53); }
+    .btn-login { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .main-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.3); }
+    .main-btn:active { transform: translateY(0); }
+
+    /* Login Card */
+    .login-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 24px;
+      padding: 40px;
+      width: 420px;
+      max-width: 90%;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+      position: relative;
+      animation: slideIn 0.8s ease-out;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .form-title {
+      text-align: center;
+      color: white;
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 30px;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    .messageDiv {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #ef4444;
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      display: none;
+    }
+    .role-selection {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .role-btn {
+      flex: 1;
+      padding: 15px 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-radius: 16px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .role-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+    .role-btn.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 30px rgba(102, 126, 234, 0.4);
+      transform: translateY(-2px);
+    }
+    .dropdown-container { margin-bottom: 25px; }
+    .dropdown-container.hidden { display: none; }
+    .dropdown-container label {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .dropdown-container select {
+      width: 100%;
+      padding: 15px 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-radius: 16px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    .dropdown-container select:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+    .dropdown-container select option {
+      background: #764ba2;
+      color: white;
+      padding: 10px;
+    }
+    .input-group {
+      position: relative;
+      margin-bottom: 25px;
+    }
+    .input-group i {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 16px;
+      z-index: 1;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 15px 20px 15px 50px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-radius: 16px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    .input-group input::placeholder { color: rgba(255, 255, 255, 0.6); }
+    .input-group input:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+    .btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 16px;
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      margin-bottom: 25px;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+    }
+    .btn:active { transform: translateY(0); }
+    .links {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+    }
+    .links p { margin-bottom: 15px; }
+    .btn-secondary {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      border: none;
+      padding: 12px 30px;
+      border-radius: 12px;
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(17, 153, 142, 0.3);
+    }
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(17, 153, 142, 0.4);
+    }
+    .success-message {
+      background: rgba(56, 239, 125, 0.2);
+      border: 1px solid rgba(56, 239, 125, 0.4);
+      color: #38ef7d;
+      padding: 15px;
+      border-radius: 12px;
+      text-align: center;
+      margin-top: 20px;
+      font-weight: 500;
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .scan-ui {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      padding: 30px;
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+      color: white;
+    }
+    .work-mode-selection { display: none; margin-top: 20px; }
+    .work-mode-options {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .work-mode-option {
+      padding: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 12px;
+      cursor: pointer;
+      background: rgba(255,255,255,0.1);
+      transition: all 0.3s;
+      width: 140px;
+    }
+    .work-mode-option:hover, .work-mode-option.selected {
+      background: rgba(255,255,255,0.25);
+      transform: translateY(-4px);
+    }
+    .work-mode-icon { font-size: 2rem; margin-bottom: 8px; }
+    .work-mode-label { font-weight: 600; font-size: 1.0rem; color: #fff; }
+    .work-mode-desc { font-size: 0.8rem; color: rgba(255,255,255,0.8); margin-top: 6px; }
+    #cameraContainer { display: none; margin-top: 20px; }
+    #videoFeed {
+      width: 100%;
+      max-width: 500px;
+      height: auto;
+      border-radius: 12px;
+      border: 2px solid #667eea;
+      background: #000;
+    }
+    .camera-error {
+      color: #dc3545;
+      background: rgba(220, 53, 69, 0.1);
+      padding: 12px;
+      border-radius: 8px;
+      margin: 16px 0;
+      display: none;
+    }
+    .location-radius-display {
+      display: none;
+      margin: 16px auto;
+      padding: 12px;
+      border-radius: 10px;
+      max-width: 500px;
+      text-align: center;
+      font-weight: 600;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+    .location-radius-title {
+      font-size: 1.0rem;
+      margin-bottom: 8px;
+    }
+    .location-radius-status {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+    }
+    .location-radius-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .location-radius-green { background-color: #28a745; }
+    .location-radius-yellow { background-color: #ffc107; }
+    .location-radius-red { background-color: #dc3545; }
+    .location-radius-distance {
+      font-weight: bold;
+      margin-left: 6px;
+    }
+    .back-btn {
+      margin-top: 20px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #loadingOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(102, 126, 234, 0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
+      color: #fff;
+      font-size: 16px;
+      backdrop-filter: blur(10px);
+    }
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid #fff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .debug-location {
+      margin-top: 12px;
+      padding: 10px;
+      background: #e8f4ff;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: #2c3e50;
+      display: none;
+    }
+    @media (max-width: 600px) {
+      .main-title { font-size: 2.2rem; }
+      .main-slogan { font-size: 1rem; }
+      .action-buttons { gap: 16px; }
+      .login-card { padding: 30px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="particles">
+      <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+      <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+      <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+      <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+      <div class="magical-orb"></div><div class="magical-orb"></div><div class="magical-orb"></div><div class="magical-orb"></div>
+      <div class="magical-orb"></div><div class="magical-orb"></div><div class="magical-orb"></div><div class="magical-orb"></div>
+      <div class="magical-orb"></div><div class="magical-orb"></div>
+    </div>
+    <div class="twinkling-stars">
+      <div class="twinkling-star"></div><div class="twinkling-star"></div><div class="twinkling-star"></div>
+      <div class="twinkling-star"></div><div class="twinkling-star"></div><div class="twinkling-star"></div>
+      <div class="twinkling-star"></div><div class="twinkling-star"></div>
+    </div>
+
+    <!-- Welcome Screen -->
+    <div class="screen active" id="welcomeScreen">
+      <div class="welcome-content">
+        <h1 class="main-title">HR Attendance System</h1>
+        <p class="main-slogan">Secure. Smart. Seamless. Track your attendance with facial recognition.</p>
+        <div class="action-buttons">
+          <button class="main-btn btn-face" id="faceScanBtn">
+            <i class="fas fa-camera"></i> Face Scan
+          </button>
+          <button class="main-btn btn-login" id="loginBtn">
+            <i class="fas fa-user-lock"></i> View Account (Login)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login Form -->
+    <div class="screen" id="loginScreen">
+      <div class="login-card">
+        <h1 class="form-title" id="formTitle">LOGIN</h1>
+        <div id="signInMessage" class="messageDiv" style="display:none;"></div>
+        <div class="role-selection">
+          <button type="button" id="staffBtn" class="role-btn staff active">
+            <span>👤</span> <span id="staffButtonText">Staff</span>
+          </button>
+          <button type="button" id="adminBtn" class="role-btn admin">
+            <span>👨‍💼</span> <span id="adminButtonText">Admin</span>
+          </button>
+        </div>
+        <div class="dropdown-container" id="staffContainer">
+          <label for="staffDropdown" id="staffLabel"><strong>Staff Name:</strong></label>
+          <select id="staffDropdown">
+            <option value="">Choose your name...</option>
+          </select>
+        </div>
+        <div class="dropdown-container hidden" id="adminContainer">
+          <label for="adminDropdown" id="adminLabel"><strong>Admin Name:</strong></label>
+          <select id="adminDropdown">
+            <option value="">Choose your name...</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="password" placeholder="Password" required>
+        </div>
+        <button type="button" class="btn" id="submitSignIn">
+          <span id="signinButtonText">Sign In</span>
+        </button>
+        <div class="links">
+          <p id="registerText">Don't have an account?</p>
+          <button class="btn-secondary" id="registerBtn">
+            <span id="registerButtonText">Register</span>
+          </button>
+        </div>
+        <div class="success-message" id="successMessage">
+          Welcome! Redirecting to your dashboard...
+        </div>
+        <button class="back-btn" id="backToWelcomeFromLogin">← Back</button>
+      </div>
+    </div>
+
+    <!-- Scan UI -->
+    <div class="screen" id="scanScreen">
+      <div class="scan-ui">
+        <h3>Select Your Work Mode</h3>
+        <div class="work-mode-selection" id="workModeSelection">
+          <div class="work-mode-options">
+            <div class="work-mode-option" id="wfoOption" data-mode="wfo">
+              <div class="work-mode-icon"><i class="fas fa-building"></i></div>
+              <div class="work-mode-label">Work From Office (WFO)</div>
+              <div class="work-mode-desc">At company premises</div>
+            </div>
+            <div class="work-mode-option" id="wfhOption" data-mode="wfh">
+              <div class="work-mode-icon"><i class="fas fa-home"></i></div>
+              <div class="work-mode-label">Work From Home (WFH)</div>
+              <div class="work-mode-desc">At your registered location</div>
+            </div>
+          </div>
+        </div>
+        <div id="debugLocation" class="debug-location">
+          <strong>📍 Detected:</strong> <span id="debugCoords">--</span> (Accuracy: <span id="debugAccuracy">--</span>m)
+        </div>
+        <div id="cameraContainer">
+          <h3>Position your face clearly</h3>
+          <div id="cameraError" class="camera-error"></div>
+          <video id="videoFeed" autoplay playsinline muted></video>
+          <div id="locationRadiusDisplay" class="location-radius-display">
+            <div class="location-radius-title">Location Status</div>
+            <div class="location-radius-status">
+              <div class="location-radius-dot" id="locationRadiusDot"></div>
+              <span id="locationRadiusText">Getting location...</span>
+              <span class="location-radius-distance" id="locationRadiusDistance"></span>
+            </div>
+          </div>
+          <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+          <br>
+          <button id="captureBtn" class="main-btn btn-face" style="margin-top:15px;">
+            <i class="fas fa-bolt"></i> Capture & Recognize
+          </button>
+        </div>
+        <button class="back-btn" id="backToWelcomeFromScan">← Back</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Firebase + Scan Logic -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3nU-WVQ-7zm9RijUhj420QPET9GYQpj8",
+      authDomain: "login-form-84016.firebaseapp.com",
+      projectId: "login-form-84016",
+      storageBucket: "login-form-84016.firebasestorage.app",
+      messagingSenderId: "568483509830",
+      appId: "1:568483509830:web:0d6de2a1537154bd67fc47",
+      measurementId: "G-KCGTMGB6HB"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ========== LOGIN LOGIC ==========`
+    const staffBtn = document.getElementById('staffBtn');
+    const adminBtn = document.getElementById('adminBtn');
+    const staffContainer = document.getElementById('staffContainer');
+    const adminContainer = document.getElementById('adminContainer');
+    const passwordInput = document.getElementById('password');
+    const registerBtn = document.getElementById('registerBtn');
+    const signInMessage = document.getElementById('signInMessage');
+    const successMessage = document.getElementById('successMessage');
+    const submitBtn = document.getElementById('submitSignIn');
+    const staffDropdown = document.getElementById('staffDropdown');
+    const adminDropdown = document.getElementById('adminDropdown');
+
+    let currentRole = 'staff';
+
+    function showMessage(message, type = 'error') {
+      signInMessage.textContent = message;
+      signInMessage.style.display = 'block';
+      if (type === 'info') {
+        signInMessage.style.background = 'rgba(59, 130, 246, 0.2)';
+        signInMessage.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+        signInMessage.style.color = '#3b82f6';
+      } else {
+        signInMessage.style.background = 'rgba(239, 68, 68, 0.2)';
+        signInMessage.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+        signInMessage.style.color = '#ef4444';
+      }
+    }
+
+    function hideMessage() {
+      signInMessage.style.display = 'none';
+    }
+
+    function selectRole(role) {
+      currentRole = role;
+      staffBtn.classList.toggle('active', role === 'staff');
+      adminBtn.classList.toggle('active', role === 'admin');
+      staffContainer.classList.toggle('hidden', role !== 'staff');
+      adminContainer.classList.toggle('hidden', role !== 'admin');
+      passwordInput.value = '';
+      hideMessage();
+    }
+
+    function handleRegister() {
+      registerBtn.style.transform = 'scale(0.98)';
+      setTimeout(() => {
+        registerBtn.style.transform = '';
+        window.location.href = 'register.html';
+      }, 100);
+    }
+
+    staffBtn.addEventListener('click', () => selectRole('staff'));
+    adminBtn.addEventListener('click', () => selectRole('admin'));
+    registerBtn.addEventListener('click', handleRegister);
+
+    async function loadUsersByRole(role, dropdown) {
+      dropdown.innerHTML = `<option value="">Loading ${role}s...</option>`;
+      try {
+        const q = query(collection(db, "users"), where("role", "==", role));
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+          dropdown.innerHTML = `<option value="">No ${role}s found</option>`;
+          return;
+        }
+        dropdown.innerHTML = `<option value="">Choose your name...</option>`;
+        querySnapshot.forEach((doc) => {
+          const user = doc.data();
+          const option = document.createElement("option");
+          option.value = user.email;
+          option.textContent = `${user.firstName} ${user.lastName}`;
+          dropdown.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error loading users:", error);
+        dropdown.innerHTML = `<option value="">Error loading ${role}s</option>`;
+        showMessage("Failed to load user list. Please try again.", "error");
+      }
+    }
+
+    loadUsersByRole("staff", staffDropdown);
+    loadUsersByRole("admin", adminDropdown);
+
+    submitBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      hideMessage();
+
+      const password = passwordInput.value.trim();
+      let email = "";
+
+      if (currentRole === "staff") {
+        email = staffDropdown.value;
+      } else if (currentRole === "admin") {
+        email = adminDropdown.value;
+      }
+
+      if (!email || !password) {
+        showMessage("⚠️ Please select your name and enter a password.");
+        return;
+      }
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        localStorage.setItem("loggedInUserId", user.uid);
+
+        successMessage.style.display = "block";
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Signing in...";
+
+        setTimeout(() => {
+          if (currentRole === "staff") {
+            window.location.href = "/dashboard";
+          } else {
+            window.location.href = "/admin-dashboard";
+          }
+        }, 1500);
+      } catch (err) {
+        console.error("Login error:", err);
+        let msg = "Invalid email or password.";
+        if (err.code === "auth/user-not-found" || err.code === "auth/invalid-credential") {
+          msg = "Invalid credentials. Please check your selection and password.";
+        } else if (err.code === "auth/too-many-requests") {
+          msg = "Too many failed attempts. Try again later.";
+        }
+        showMessage(msg, "error");
+        submitBtn.disabled = false;
+        submitBtn.textContent = document.getElementById('signinButtonText').textContent;
+      }
+    });
+
+    // ========== FACE SCAN LOGIC ==========
+    let stream = null;
+    let selectedWorkMode = null;
+    let homeLocation = { lat: 3.205170, lng: 101.720107 };
+    const OFFICE_LAT = 3.205170;
+    const OFFICE_LNG = 101.720107;
+    const WFO_RADIUS = 100;
+    const WFH_RADIUS = 500;
+    let isProcessing = false;
+
+    const wfoOption = document.getElementById('wfoOption');
+    const wfhOption = document.getElementById('wfhOption');
+    const cameraContainer = document.getElementById('cameraContainer');
+    const videoFeed = document.getElementById('videoFeed');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('captureBtn');
+    const cameraErrorDiv = document.getElementById('cameraError');
+    const locationRadiusDisplay = document.getElementById('locationRadiusDisplay');
+    const locationRadiusDot = document.getElementById('locationRadiusDot');
+    const locationRadiusText = document.getElementById('locationRadiusText');
+    const locationRadiusDistance = document.getElementById('locationRadiusDistance');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const debugLocation = document.getElementById('debugLocation');
+    const debugCoords = document.getElementById('debugCoords');
+    const debugAccuracy = document.getElementById('debugAccuracy');
+
+    function showLoading(text = "Processing...") {
+      loadingOverlay.querySelector("p").textContent = text;
+      loadingOverlay.style.display = "flex";
+    }
+    function hideLoading() {
+      loadingOverlay.style.display = "none";
+    }
+    function showCameraError(text) {
+      cameraErrorDiv.textContent = text;
+      cameraErrorDiv.style.display = 'block';
+      setTimeout(() => cameraErrorDiv.style.display = 'none', 5000);
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371e3;
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lon2-lon1) * Math.PI/180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    function getLocationStatusText(distance, mode) {
+      if (mode === 'wfo') {
+        if (distance < 50) return "At Office";
+        else if (distance < 500) return "Near Office";
+        else return "Far from Office";
+      } else {
+        if (distance < 50) return "At Home";
+        else if (distance < 500) return "Near Home";
+        else return "Far from Home";
+      }
+    }
+
+    function getLocationStatus(distance, mode) {
+      const text = getLocationStatusText(distance, mode);
+      let color = 'red';
+      if (distance <= (mode === 'wfo' ? WFO_RADIUS : WFH_RADIUS)) {
+        color = 'green';
+      } else if (distance <= 500) {
+        color = 'yellow';
+      }
+      return {
+        text,
+        color,
+        distance: `${distance.toFixed(1)}m`
+      };
+    }
+
+    function validateLocation(lat, lng) {
+      if (!selectedWorkMode) return { valid: false, message: "Please select a work mode first" };
+      const distance = selectedWorkMode === 'wfo'
+        ? calculateDistance(OFFICE_LAT, OFFICE_LNG, lat, lng)
+        : calculateDistance(homeLocation.lat, homeLocation.lng, lat, lng);
+      const allowed = selectedWorkMode === 'wfo' ? WFO_RADIUS : WFH_RADIUS;
+      if (distance <= allowed) {
+        return { valid: true, message: `You are ${distance.toFixed(1)}m from ${selectedWorkMode === 'wfo' ? 'office' : 'home'}` };
+      } else {
+        return { valid: false, message: `You are ${distance.toFixed(1)}m away. Must be within ${allowed}m for ${selectedWorkMode.toUpperCase()}` };
+      }
+    }
+
+    function updateLocationRadiusDisplay(lat, lng) {
+      if (!selectedWorkMode) {
+        locationRadiusDisplay.style.display = 'none';
+        return;
+      }
+      let distance = selectedWorkMode === 'wfo'
+        ? calculateDistance(OFFICE_LAT, OFFICE_LNG, lat, lng)
+        : calculateDistance(homeLocation.lat, homeLocation.lng, lat, lng);
+      const status = getLocationStatus(distance, selectedWorkMode);
+      locationRadiusDisplay.style.display = 'block';
+      locationRadiusText.textContent = status.text;
+      locationRadiusDistance.textContent = status.distance;
+      locationRadiusDot.className = 'location-radius-dot';
+      locationRadiusDot.classList.add(
+        status.color === 'green'
+          ? 'location-radius-green'
+          : status.color === 'yellow'
+          ? 'location-radius-yellow'
+          : 'location-radius-red'
+      );
+    }
+
+    function startLocationTracking() {
+      if (window.locationWatchId) navigator.geolocation.clearWatch(window.locationWatchId);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          updateLocationRadiusDisplay(latitude, longitude);
+          window.locationWatchId = navigator.geolocation.watchPosition(
+            (p) => updateLocationRadiusDisplay(p.coords.latitude, p.coords.longitude),
+            (e) => console.warn("Location tracking error:", e),
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+          );
+        },
+        (e) => {
+          locationRadiusDisplay.style.display = 'block';
+          locationRadiusText.textContent = "Location unavailable";
+          locationRadiusDot.className = 'location-radius-dot location-radius-red';
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    }
+
+    async function startCamera() {
+      try {
+        if (stream) stream.getTracks().forEach(track => track.stop());
+        const constraints = { video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: false };
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoFeed.srcObject = stream;
+        videoFeed.onloadedmetadata = () => videoFeed.play();
+        videoFeed.onerror = () => showCameraError("Failed to start camera.");
+        startLocationTracking();
+      } catch (err) {
+        let msg = "Camera access denied or not available.";
+        if (err.name === "NotAllowedError") msg = "Please allow camera access in browser settings.";
+        else if (err.name === "NotFoundError") msg = "No camera found.";
+        else if (err.name === "NotReadableError") msg = "Camera in use by another app.";
+        showCameraError(msg);
+        stopCamera();
+      }
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      if (window.locationWatchId) {
+        navigator.geolocation.clearWatch(window.locationWatchId);
+        window.locationWatchId = null;
+      }
+      cameraContainer.style.display = 'none';
+      document.getElementById('workModeSelection').style.display = 'none';
+      selectedWorkMode = null;
+      cameraErrorDiv.style.display = 'none';
+      locationRadiusDisplay.style.display = 'none';
+      debugLocation.style.display = 'none';
+    }
+
+    async function handleWorkModeSelection(mode) {
+      selectedWorkMode = mode;
+      wfoOption.classList.toggle('selected', mode === 'wfo');
+      wfhOption.classList.toggle('selected', mode === 'wfh');
+      if (mode === 'wfh') {
+        showLoading("Detecting and saving your home location...");
+        try {
+          const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 15000,
+              maximumAge: 0
+            });
+          });
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          const accuracy = position.coords.accuracy;
+          if (accuracy > 100) {
+            const confirmed = confirm(
+              `⚠️ Location accuracy is low (${accuracy.toFixed(0)}m).\n` +
+              `Detected: ${lat.toFixed(6)}, ${lng.toFixed(6)}\n` +
+              `Continue anyway?`
+            );
+            if (!confirmed) {
+              hideLoading();
+              selectedWorkMode = null;
+              wfhOption.classList.remove('selected');
+              return;
+            }
+          }
+          homeLocation = { lat, lng };
+          debugCoords.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+          debugAccuracy.textContent = accuracy.toFixed(0);
+          debugLocation.style.display = 'block';
+        } catch (err) {
+          console.error("Auto-save location error:", err);
+          let msg = "Failed to get location. Please ensure location services are enabled.";
+          if (err.code === 1) msg = "Location permission denied.";
+          showCameraError(msg);
+          selectedWorkMode = null;
+          wfhOption.classList.remove('selected');
+          hideLoading();
+          return;
+        }
+      } else {
+        debugLocation.style.display = 'none';
+      }
+      hideLoading();
+      document.getElementById('workModeSelection').style.display = 'none';
+      cameraContainer.style.display = 'block';
+      startCamera();
+    }
+
+    // Navigation
+    document.getElementById('faceScanBtn').addEventListener('click', () => {
+      document.getElementById('welcomeScreen').classList.remove('active');
+      document.getElementById('scanScreen').classList.add('active');
+      document.getElementById('workModeSelection').style.display = 'block';
+    });
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      document.getElementById('welcomeScreen').classList.remove('active');
+      document.getElementById('loginScreen').classList.add('active');
+    });
+    document.getElementById('backToWelcomeFromLogin').addEventListener('click', () => {
+      document.getElementById('loginScreen').classList.remove('active');
+      document.getElementById('welcomeScreen').classList.add('active');
+    });
+    document.getElementById('backToWelcomeFromScan').addEventListener('click', () => {
+      document.getElementById('scanScreen').classList.remove('active');
+      document.getElementById('welcomeScreen').classList.add('active');
+    });
+
+    wfoOption.addEventListener('click', () => handleWorkModeSelection('wfo'));
+    wfhOption.addEventListener('click', () => handleWorkModeSelection('wfh'));
+
+    // 🔥 FACE CAPTURE & RECOGNITION – BACKEND SAVES ATTENDANCE
+    captureBtn.addEventListener('click', async () => {
+      if (isProcessing) return;
+      isProcessing = true;
+      captureBtn.disabled = true;
+      captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+      if (!videoFeed.srcObject || videoFeed.videoWidth === 0) {
+        showCameraError("Camera is not ready.");
+        isProcessing = false;
+        captureBtn.disabled = false;
+        captureBtn.innerHTML = '<i class="fas fa-bolt"></i> Capture & Recognize';
+        return;
+      }
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
+      const img = canvas.toDataURL('image/png');
+
+      let lat = null, lng = null;
+      showLoading("Getting your location...");
+      try {
+        const pos = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
+          });
+        });
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch (err) {
+        hideLoading();
+        showCameraError("Location access denied. Please enable location services.");
+        stopCamera();
+        isProcessing = false;
+        captureBtn.disabled = false;
+        captureBtn.innerHTML = '<i class="fas fa-bolt"></i> Capture & Recognize';
+        return;
+      }
+
+      const validation = validateLocation(lat, lng);
+      if (!validation.valid) {
+        hideLoading();
+        showCameraError(validation.message);
+        stopCamera();
+        isProcessing = false;
+        captureBtn.disabled = false;
+        captureBtn.innerHTML = '<i class="fas fa-bolt"></i> Capture & Recognize';
+        return;
+      }
+
+      showLoading("Recognizing face...");
+      try {
+        const res = await fetch("/recognize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            image: img,
+            latitude: lat,
+            longitude: lng,
+            work_mode: selectedWorkMode,
+            home_lat: homeLocation.lat,
+            home_lng: homeLocation.lng
+          })
+        });
+
+        const result = await res.json();
+
+        if (result.success && result.name) {
+          const firstName = result.name.split(' ')[0] || result.name;
+          alert(`Hai ${firstName}! You've checked in.`);
+          window.location.href = "/";
+        } else {
+          alert(`❌ ${result.error || "Recognition failed. Please register first."}`);
+        }
+      } catch (err) {
+        console.error("Recognition error:", err);
+        alert("⚠️ Failed to process check-in");
+      } finally {
+        hideLoading();
+        stopCamera();
+        isProcessing = false;
+        captureBtn.disabled = false;
+        captureBtn.innerHTML = '<i class="fas fa-bolt"></i> Capture & Recognize';
+      }
+    });
+  </script>
+</body>
+</html>

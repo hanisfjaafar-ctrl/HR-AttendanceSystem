@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      min-height: 100vh;
+      padding: 0;
+      overflow-x: hidden;
+      display: flex;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 140px;
+      background: rgba(255, 255, 255, 0.95);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(10px);
+    }
+
+    .sidebar.expanded {
+      width: 220px;
+    }
+
+    .sidebar-header {
+      padding: 15px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #eee;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #333;
+      white-space: nowrap;
+    }
+
+    .sidebar:not(.expanded) .logo-text {
+      display: none;
+    }
+
+    .toggle-btn {
+      background: none;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #667eea;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .toggle-btn:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .nav-links {
+      padding: 12px 0;
+      flex: 1;
+    }
+
+    .nav-item {
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #555;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+      cursor: pointer;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      border-left: 3px solid #667eea;
+    }
+
+    .nav-item i {
+      font-size: 1rem;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar:not(.expanded) .nav-item span {
+      display: none;
+    }
+
+    .sidebar:not(.expanded) .nav-item {
+      justify-content: center;
+      padding: 12px;
+      gap: 0;
+    }
+
+    .user-info {
+      padding: 12px;
+      border-top: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    .user-details {
+      flex: 1;
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9rem;
+    }
+
+    .user-email {
+      font-size: 0.75rem;
+      color: #777;
+    }
+
+    .sidebar:not(.expanded) .user-details {
+      display: none;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      margin-left: 140px;
+      transition: margin-left 0.3s ease;
+    }
+
+    .sidebar.expanded ~ .main-content {
+      margin-left: 220px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+
+    .welcome-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .welcome-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .welcome-header p {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    /* Warning Notifications */
+    #warningNotifications {
+      background: #fff5f5;
+      border-left: 3px solid #dc3545;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .warning-title {
+      font-weight: 700;
+      color: #dc3545;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 1rem;
+    }
+    .warning-item {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    }
+    .warning-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .warning-btn {
+      padding: 5px 12px;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-download {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+    .btn-mark {
+      background: #e9ecef;
+      color: #495057;
+    }
+
+    /* Stats Cards */
+    .stats-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      flex: 1;
+      min-width: 200px;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .stat-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      font-size: 20px;
+    }
+
+    .leave-icon {
+      background: rgba(255, 193, 7, 0.2);
+      color: #FFC107;
+    }
+
+    .late-icon {
+      background: rgba(220, 53, 69, 0.2);
+      color: #DC3545;
+    }
+
+    .stat-info h3 {
+      font-size: 1rem;
+      color: #555;
+      margin-bottom: 6px;
+    }
+
+    .stat-info p {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #333;
+    }
+
+    /* Sections */
+    .section-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .section-title {
+      font-size: 1.3rem;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .apply-btn {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+
+    .apply-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .leave-list {
+      min-height: 80px;
+    }
+
+    .leave-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .leave-item:last-child {
+      border-bottom: none;
+    }
+
+    .leave-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .leave-type {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    .leave-dates {
+      color: #666;
+      font-size: 0.85rem;
+    }
+
+    .leave-status {
+      padding: 4px 10px;
+      border-radius: 18px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .status-pending {
+      background: rgba(255, 193, 7, 0.2);
+      color: #FFC107;
+    }
+
+    .status-approved {
+      background: rgba(40, 167, 69, 0.2);
+      color: #28A745;
+    }
+
+    .status-rejected {
+      background: rgba(220, 53, 69, 0.2);
+      color: #DC3545;
+    }
+
+    /* Attendance Log */
+    .attendance-log {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .attendance-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+      align-items: flex-start;
+    }
+
+    .attendance-item:last-child {
+      border-bottom: none;
+    }
+
+    .attendance-info {
+      flex: 1;
+      margin-right: 12px;
+    }
+
+    .attendance-date {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 3px;
+      font-size: 0.95rem;
+    }
+
+    .attendance-time {
+      color: #666;
+      font-size: 0.85rem;
+    }
+
+    .attendance-status {
+      padding: 3px 8px;
+      border-radius: 18px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-on-time {
+      background: rgba(40, 167, 69, 0.2);
+      color: #28A745;
+    }
+
+    .status-late {
+      background: rgba(220, 53, 69, 0.2);
+      color: #DC3545;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.3s;
+    }
+
+    .close-modal:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .form-group {
+      padding: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #333;
+      font-size: 0.95rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .modal-footer {
+      padding: 16px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      border-top: 1px solid #eee;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.95rem;
+    }
+
+    .btn-secondary {
+      background: #eee;
+      color: #333;
+      border: none;
+    }
+
+    .btn-secondary:hover {
+      background: #ddd;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Loading Overlay */
+    #loadingOverlay {
+      position: fixed;
+      top: 0; 
+      left: 0;
+      width: 100%; 
+      height: 100%;
+      background: rgba(102, 126, 234, 0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
+      color: #fff;
+      font-size: 16px;
+      backdrop-filter: blur(10px);
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid #fff;
+      border-radius: 50%;
+      width: 50px; 
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 60px;
+      }
+
+      .sidebar.expanded {
+        width: 220px;
+      }
+
+      .main-content {
+        padding: 15px;
+        margin-left: 60px;
+      }
+
+      .sidebar.expanded ~ .main-content {
+        margin-left: 220px;
+      }
+      
+      .container {
+        padding: 20px;
+      }
+      
+      .stats-container {
+        flex-direction: column;
+      }
+      
+      .stat-card {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading dashboard...</p>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon">
+          <i class="fas fa-user-clock"></i>
+        </div>
+        <div class="logo-text">Attendance</div>
+      </div>
+      <button class="toggle-btn" id="toggleSidebar">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+    
+    <div class="nav-links" id="navLinks"></div>
+    
+    <div class="user-info">
+      <div class="avatar" id="sidebarAvatar">U</div>
+      <div class="user-details">
+        <div class="user-name" id="sidebarUserName">Loading...</div>
+        <div class="user-email" id="sidebarUserEmail">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+      <div id="warningNotifications">
+        <div class="warning-title"><i class="fas fa-exclamation-triangle"></i> Important Notices</div>
+        <div id="warningList"></div>
+      </div>
+
+      <div class="welcome-header">
+        <h1 id="welcomeText">Welcome!</h1>
+        <p>Here's an overview of your attendance and leave requests</p>
+      </div>
+      
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-icon leave-icon">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <div class="stat-info">
+            <h3>Pending Leaves</h3>
+            <p id="totalLeaveRequests">0</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon late-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-info">
+            <h3>Late Arrivals</h3>
+            <p id="lateCount">0</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section-card">
+        <div class="section-header">
+          <h3 class="section-title">My Leave Requests</h3>
+          <button class="apply-btn" id="applyLeaveBtn">
+            <i class="fas fa-plus"></i> Apply
+          </button>
+        </div>
+        <div class="leave-list" id="myLeaveList">
+          <p style="text-align:center; color:#666; padding:15px;">No leave requests found</p>
+        </div>
+      </div>
+      
+      <div class="section-card">
+        <div class="section-header">
+          <h3 class="section-title">Attendance Log</h3>
+        </div>
+        <div class="attendance-log" id="attendanceLog">
+          <p style="text-align:center; color:#666; padding:15px;">No attendance records found</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal" id="applyLeaveModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Apply for Leave</h3>
+        <button class="close-modal" id="closeModal">&times;</button>
+      </div>
+      <form id="leaveForm">
+        <div class="form-group">
+          <label for="leaveType">Leave Type</label>
+          <select id="leaveType" required>
+            <option value="">Select leave type</option>
+            <option value="annual">Annual Leave</option>
+            <option value="sick">Sick Leave</option>
+            <option value="personal">Personal Leave</option>
+            <option value="maternity">Maternity Leave</option>
+            <option value="paternity">Paternity Leave</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="startDate">Start Date</label>
+          <input type="date" id="startDate" required>
+        </div>
+        <div class="form-group">
+          <label for="endDate">End Date</label>
+          <input type="date" id="endDate" required>
+        </div>
+        <div class="form-group">
+          <label for="reason">Reason</label>
+          <textarea id="reason" rows="4" placeholder="Please provide a reason for your leave request"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelLeave">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    // ✅ Clean Firebase imports — NO SPACES
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      addDoc, 
+      query, 
+      where, 
+      onSnapshot, 
+      doc, 
+      getDoc,
+      getDocs,
+      updateDoc,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3nU-WVQ-7zm9RijUhj420QPET9GYQpj8",
+      authDomain: "login-form-84016.firebaseapp.com",
+      projectId: "login-form-84016",
+      storageBucket: "login-form-84016.firebasestorage.app",
+      messagingSenderId: "568483509830",
+      appId: "1:568483509830:web:0d6de2a1537154bd67fc47",
+      measurementId: "G-KCGTMGB6HB"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+
+    let currentUid = null;
+    let currentUserData = null;
+
+    // DOM Elements
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const myLeaveList = document.getElementById('myLeaveList');
+    const applyLeaveBtn = document.getElementById('applyLeaveBtn');
+    const applyLeaveModal = document.getElementById('applyLeaveModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelLeave = document.getElementById('cancelLeave');
+    const leaveForm = document.getElementById('leaveForm');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const sidebarAvatar = document.getElementById("sidebarAvatar");
+    const sidebarUserName = document.getElementById("sidebarUserName");
+    const sidebarUserEmail = document.getElementById("sidebarUserEmail");
+    const welcomeText = document.getElementById("welcomeText");
+    const totalLeaveRequests = document.getElementById("totalLeaveRequests");
+    const lateCount = document.getElementById("lateCount");
+    const navLinks = document.getElementById("navLinks");
+    const attendanceLog = document.getElementById("attendanceLog");
+    const warningNotifications = document.getElementById("warningNotifications");
+    const warningList = document.getElementById("warningList");
+
+    // Show loading immediately
+    showLoading();
+
+    // Navigation
+    function addNavLink(text, icon, link, isActive = false) {
+      const a = document.createElement("a");
+      a.className = `nav-item ${isActive ? 'active' : ''}`;
+      a.href = link;
+      a.innerHTML = `<i class="fas ${icon}"></i><span>${text}</span>`;
+      navLinks.appendChild(a);
+    }
+
+    function buildNavigation(role) {
+      navLinks.innerHTML = '';
+      if (role === "admin") {
+        addNavLink("Dashboard", "fa-home", "/dashboard", true);
+        addNavLink("Staff Management", "fa-users", "/manage-staff");
+        addNavLink("Staff Attendance Log", "fa-list", "/admin-attendancelog");
+        addNavLink("Staff Leave Requests", "fa-calendar-alt", "/admin-leavecalendar");
+        addNavLink("Admin Profile", "fa-user", "/profile");
+      } else {
+        addNavLink("Dashboard", "fa-home", "/dashboard", true);
+        addNavLink("Attendance Log", "fa-list", "/attendance");
+        addNavLink("Leave Requests", "fa-calendar-alt", "/leavecalendar");
+        addNavLink("Profile", "fa-user", "/profile");
+      }
+      
+      const logout = document.createElement("a");
+      logout.className = "nav-item";
+      logout.href = "#";
+      logout.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>Logout</span>';
+      logout.addEventListener("click", (e) => {
+        e.preventDefault();
+        signOut(auth).then(() => window.location.href = "/");
+      });
+      navLinks.appendChild(logout);
+    }
+
+    // Date helpers
+    function formatDate(dateStr) {
+      if (!dateStr) return "N/A";
+      return new Date(dateStr).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+
+    // Checkout
+    async function handleCheckout(docId) {
+      if (!docId) {
+        alert("Error: No attendance record found.");
+        return;
+      }
+
+      showLoading("Processing checkout...");
+      try {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+
+        await updateDoc(doc(db, "attendance_test", docId), {
+          checkout: timeString,
+          lastUpdated: now
+        });
+
+        alert("✅ Checked out successfully!");
+      } catch (error) {
+        console.error("Checkout error:", error);
+        alert("❌ Failed to check out. Please try again.");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Warnings
+    async function loadWarningLetters() {
+      if (!currentUid) return;
+      try {
+        const q = query(
+          collection(db, "warningLetters"),
+          where("staffId", "==", currentUid),
+          where("status", "==", "unread")
+        );
+        const snapshot = await getDocs(q);
+        const warnings = [];
+        snapshot.forEach(doc => warnings.push({ id: doc.id, ...doc.data() }));
+        
+        if (warnings.length > 0) {
+          warningList.innerHTML = '';
+          warnings.forEach(w => {
+            const div = document.createElement("div");
+            div.className = "warning-item";
+            const sentDate = new Date(w.sentAt).toLocaleString();
+            div.innerHTML = `
+              <div><strong>⚠️ Attendance Warning</strong></div>
+              <p><small>${w.reason || "Excessive late arrivals."}</small></p>
+              <p><em>Sent on: ${sentDate}</em></p>
+              <div class="warning-actions">
+                <button class="warning-btn btn-download" onclick="downloadWarningLetter('${w.id}', '${w.reason || "Excessive late arrivals."}')">
+                  <i class="fas fa-download"></i> Download Letter
+                </button>
+                <button class="warning-btn btn-mark" onclick="markWarningAsRead('${w.id}')">
+                  Mark as Read
+                </button>
+              </div>
+            `;
+            warningList.appendChild(div);
+          });
+          warningNotifications.style.display = 'block';
+        } else {
+          warningNotifications.style.display = 'none';
+        }
+      } catch (err) {
+        console.error("Error loading warnings:", err);
+      }
+    }
+
+    window.markWarningAsRead = async function(letterId) {
+      try {
+        await updateDoc(doc(db, "warningLetters", letterId), { status: "read" });
+        loadWarningLetters();
+      } catch (err) {
+        console.error("Failed to mark as read:", err);
+        alert("Failed to update warning status.");
+      }
+    };
+
+    window.downloadWarningLetter = function(letterId, reason) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const staffName = sidebarUserName.textContent.trim() || "Staff Member";
+      const dateStr = new Date().toLocaleDateString();
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("ATTENDANCE WARNING LETTER", 15, 20);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      const lines = [
+        "",
+        "To: " + staffName,
+        "From: Human Resources / Admin",
+        "Date: " + dateStr,
+        "",
+        "This is to formally notify you that our attendance records indicate",
+        "you have violated company punctuality policy.",
+        "",
+        "Reason: " + reason,
+        "",
+        "Repeated tardiness affects team productivity and is a breach of employment terms.",
+        "",
+        "You are hereby warned to maintain punctuality effective immediately.",
+        "",
+        "Failure to comply may result in further disciplinary action,",
+        "up to and including termination.",
+        "",
+        "Sincerely,",
+        "Management",
+        "Company: Setapak Central"
+      ];
+
+      doc.text(lines, 15, 30);
+      doc.save(`warning_letter_${new Date().toISOString().slice(0, 10)}.pdf`);
+    };
+
+    // Toggle sidebar
+    function toggleSidebar() {
+      sidebar.classList.toggle('expanded');
+      const isExpanded = sidebar.classList.contains('expanded');
+      toggleBtn.innerHTML = isExpanded 
+        ? '<i class="fas fa-chevron-left"></i>' 
+        : '<i class="fas fa-chevron-right"></i>';
+    }
+
+    // Form submission
+    async function submitLeaveRequest() {
+      if (!currentUid || !currentUserData) {
+        alert("User not authenticated.");
+        return;
+      }
+      
+      const leaveType = document.getElementById('leaveType').value;
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const reason = document.getElementById('reason').value;
+      
+      if (!leaveType || !startDate || !endDate) {
+        alert("Please fill in all required fields.");
+        return;
+      }
+      if (new Date(startDate) > new Date(endDate)) {
+        alert("End date must be after start date.");
+        return;
+      }
+      
+      showLoading("Submitting leave request...");
+      try {
+        await addDoc(collection(db, "leaveRequests"), {
+          userId: currentUid,
+          userName: `${currentUserData.firstName || ''} ${currentUserData.lastName || ''}`.trim() || "User",
+          leaveType,
+          startDate,
+          endDate,
+          reason,
+          status: "pending",
+          createdAt: new Date()
+        });
+        alert("Leave request submitted successfully!");
+        applyLeaveModal.style.display = 'none';
+        leaveForm.reset();
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Failed to submit request.");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Render functions
+    function renderMyLeaveRequests(leaves) {
+      myLeaveList.innerHTML = leaves.length === 0 
+        ? '<p style="text-align:center; color:#666; padding:15px;">No leave requests found</p>'
+        : leaves.map(leave => {
+            const startDate = formatDate(leave.startDate);
+            const endDate = formatDate(leave.endDate);
+            const status = (leave.status || 'pending').toLowerCase();
+            const statusDisplay = (leave.status || 'Pending').charAt(0).toUpperCase() + (leave.status || 'pending').slice(1);
+            const div = document.createElement('div');
+            div.className = 'leave-item';
+            div.innerHTML = `
+              <div class="leave-info">
+                <div class="leave-type">${leave.leaveType}</div>
+                <div class="leave-dates">${startDate} - ${endDate}</div>
+              </div>
+              <div class="leave-status status-${status}">${statusDisplay}</div>
+            `;
+            return div;
+          }).reduce((frag, el) => { frag.appendChild(el); return frag; }, document.createDocumentFragment());
+    }
+
+    function renderAttendanceLog(records) {
+      attendanceLog.innerHTML = '';
+      if (records.length === 0) {
+        attendanceLog.innerHTML = '<p style="text-align:center; color:#666; padding:15px;">No attendance records found</p>';
+        return;
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const frag = document.createDocumentFragment();
+
+      records.forEach(record => {
+        if (!record.id || !record.timestamp) return;
+
+        const recordDate = new Date(record.timestamp);
+        const dateStr = recordDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        const timeStr = recordDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const isToday = recordDate.toISOString().split('T')[0] === today;
+        const statusClass = record.status === "On Time" ? "on-time" : "late";
+        
+        let checkoutButton = '';
+        if (isToday && !record.checkout) {
+          checkoutButton = `
+            <button class="apply-btn" style="margin-top:8px; padding:6px 12px; font-size:0.85rem;" data-id="${record.id}">
+              <i class="fas fa-sign-out-alt"></i> Check Out
+            </button>
+          `;
+        }
+
+        const div = document.createElement('div');
+        div.className = 'attendance-item';
+        div.innerHTML = `
+          <div class="attendance-info">
+            <div class="attendance-date">
+              ${dateStr} ${isToday ? '<span style="color:#667eea; font-size:0.8em; margin-left:5px;">(Today)</span>' : ''}`
+          + `</div>
+            <div class="attendance-time">Check-in: ${timeStr}</div>
+            ${record.checkout ? `<div class="attendance-time">Check-out: ${record.checkout}</div>` : ''}
+            ${checkoutButton}
+          </div>
+          <div class="attendance-status status-${statusClass}">${record.status || "N/A"}</div>
+        `;
+        frag.appendChild(div);
+      });
+
+      attendanceLog.appendChild(frag);
+
+      document.querySelectorAll('.apply-btn[data-id]').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const docId = e.currentTarget.dataset.id;
+          handleCheckout(docId);
+        });
+      });
+    }
+
+    // Listeners
+    function setupLeaveListeners() {
+      if (!currentUid) return;
+      
+      const pendingQuery = query(
+        collection(db, "leaveRequests"), 
+        where("userId", "==", currentUid),
+        where("status", "==", "pending")
+      );
+      onSnapshot(pendingQuery, (snapshot) => {
+        totalLeaveRequests.textContent = snapshot.size;
+      });
+      
+      const allQuery = query(collection(db, "leaveRequests"), where("userId", "==", currentUid));
+      onSnapshot(allQuery, (snapshot) => {
+        const leaves = [];
+        snapshot.forEach(doc => leaves.push({ id: doc.id, ...doc.data() }));
+        renderMyLeaveRequests(leaves);
+      });
+    }
+
+    function setupAttendanceListener() {
+      if (!currentUid) return;
+      const q = query(collection(db, "attendance_test"), where("userId", "==", currentUid), orderBy("timestamp", "desc"));
+      onSnapshot(q, (snapshot) => {
+        let lateCountValue = 0;
+        const records = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          records.push({ id: doc.id, ...data });
+          if (data.status === "Late") lateCountValue++;
+        });
+        lateCount.textContent = lateCountValue;
+        renderAttendanceLog(records.slice(0, 5));
+      });
+    }
+
+    // UI Update
+    function updateSidebarUI(userData) {
+      const firstName = userData.firstName || "";
+      const lastName = userData.lastName || "";
+      const email = userData.email || "";
+      const initials = ((firstName.charAt(0) + lastName.charAt(0)) || "U").toUpperCase();
+      sidebarUserName.textContent = firstName || "User";
+      sidebarUserEmail.textContent = email || "No email";
+      sidebarAvatar.textContent = initials;
+      welcomeText.textContent = `Welcome, ${firstName}!`;
+    }
+
+    // Loading
+    function showLoading(msg = "Loading dashboard...") {
+      document.querySelector("#loadingOverlay p").textContent = msg;
+      loadingOverlay.style.display = 'flex';
+    }
+    
+    function hideLoading() {
+      loadingOverlay.style.display = 'none';
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('startDate').min = today;
+      document.getElementById('endDate').min = today;
+      
+      applyLeaveBtn.addEventListener('click', () => applyLeaveModal.style.display = 'flex');
+      closeModal.addEventListener('click', () => applyLeaveModal.style.display = 'none');
+      cancelLeave.addEventListener('click', () => applyLeaveModal.style.display = 'none');
+      leaveForm.addEventListener('submit', (e) => { e.preventDefault(); submitLeaveRequest(); });
+      window.addEventListener('click', (e) => { if (e.target === applyLeaveModal) applyLeaveModal.style.display = 'none'; });
+      toggleBtn.addEventListener('click', toggleSidebar);
+    });
+
+    // 🔥 Critical: Auth with guaranteed hideLoading
+    onAuthStateChanged(auth, async (user) => {
+      try {
+        if (user) {
+          currentUid = user.uid;
+          const userDoc = await getDoc(doc(db, "users", currentUid));
+          if (userDoc.exists()) {
+            currentUserData = userDoc.data();
+            updateSidebarUI(currentUserData);
+            buildNavigation(currentUserData.role || "staff");
+          }
+          setupLeaveListeners();
+          setupAttendanceListener();
+          loadWarningLetters();
+        } else {
+          window.location.href = "/";
+        }
+      } catch (err) {
+        console.error("Auth/data error:", err);
+        alert("Failed to load dashboard. Please refresh.");
+      } finally {
+        hideLoading(); // ✅ Always hide
+      }
+    });
+  </script>
+</body>
+</html>

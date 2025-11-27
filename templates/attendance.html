@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attendance Log</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+    body{background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;overflow-x:hidden;}
+
+    /* ===== SIDEBAR (MATCHES LEAVE CALENDAR) ===== */
+    .sidebar {
+      width: 140px;
+      background: rgba(255, 255, 255, 0.95);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      box-shadow: 3px 0 15px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(10px);
+    }
+    .sidebar.expanded {
+      width: 220px;
+    }
+    .sidebar-header {
+      padding: 15px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #eee;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+    }
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #333;
+      white-space: nowrap;
+    }
+    .sidebar:not(.expanded) .logo-text {
+      display: none;
+    }
+    .toggle-btn {
+      background: none;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #667eea;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    .toggle-btn:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+    .nav-links {
+      padding: 12px 0;
+      flex: 1;
+    }
+    .nav-item {
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #555;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      border-left: 3px solid #667eea;
+    }
+    .nav-item i {
+      font-size: 1rem;
+      width: 20px;
+      text-align: center;
+    }
+    .sidebar:not(.expanded) .nav-item span {
+      display: none;
+    }
+    .sidebar:not(.expanded) .nav-item {
+      justify-content: center;
+      padding: 12px;
+      gap: 0;
+    }
+    .user-info {
+      padding: 12px;
+      border-top: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+    .user-details {
+      flex: 1;
+    }
+    .user-name {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9rem;
+    }
+    .user-email {
+      font-size: 0.75rem;
+      color: #777;
+    }
+    .sidebar:not(.expanded) .user-details {
+      display: none;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      padding: 15px;
+      margin-left: 140px;
+      transition: margin-left 0.3s ease;
+    }
+    .sidebar.expanded ~ .main-content {
+      margin-left: 220px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .form-title {
+      color: #333;
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    .date-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .date-picker {
+      padding: 8px 12px;
+      border: 2px solid #e0e0e2;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      background: white;
+      color: #333;
+    }
+    .nav-btn {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .scan-btn {
+      background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 3px 8px rgba(255,107,107,0.3);
+    }
+    .scan-btn:hover {
+      transform: translateY(-2px);
+    }
+    .scan-btn.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .checkout-btn {
+      background: linear-gradient(135deg, #38b000, #9ef01a);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 3px 8px rgba(56,176,0,0.3);
+    }
+    .checkout-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* ===== TABLE ===== */
+    .attendance-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+    .attendance-table th {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      text-align: left;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .attendance-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #eee;
+      font-size: 0.9rem;
+    }
+
+    /* ===== STATUS BADGES ===== */
+    .status.on-time {
+      background: rgba(40, 167, 69, 0.15);
+      color: #28a745;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+    .status.late {
+      background: rgba(255, 77, 7, 0.15);
+      color: #b01f06;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    /* ===== MESSAGES & CONTAINERS ===== */
+    .message {
+      padding: 10px;
+      border-radius: 8px;
+      margin: 15px 0;
+      display: none;
+      font-size: 0.85rem;
+    }
+    .message.success { background: rgba(40,167,69,.15); color: #28a745; }
+    .message.error { background: rgba(220,53,69,.15); color: #dc3545; }
+
+    .current-date-display {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    #locationMap {
+      height: 240px;
+      border-radius: 8px;
+      margin-top: 16px;
+      display: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    #locationInfo, #locationStatusDisplay {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      display: none;
+      font-size: 0.85rem;
+    }
+
+    /* location status color dots */
+    .location-status-text {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .location-status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .location-status-green { background-color: #28a745; }
+    .location-status-yellow { background-color: #ffc107; }
+    .location-status-red { background-color: #dc3545; }
+
+    /* ===== LOADING OVERLAY ===== */
+    #loadingOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(102, 126, 234, 0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
+      color: #fff;
+      font-size: 16px;
+      backdrop-filter: blur(10px);
+    }
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid #fff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* ===== SCAN OVERLAY ON ATTENDANCE PAGE (CHECK-IN ONLY) ===== */
+    .scan-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.65);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    .scan-overlay.active {
+      display: flex;
+    }
+    .scan-ui {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      padding: 30px;
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+      color: white;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .scan-ui h3 {
+      margin-bottom: 10px;
+    }
+    .scan-ui p.subtitle {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-bottom: 15px;
+    }
+    .work-mode-selection {
+      margin-top: 10px;
+    }
+    .work-mode-options {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .work-mode-option {
+      padding: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 12px;
+      cursor: pointer;
+      background: rgba(255,255,255,0.1);
+      transition: all 0.3s;
+      width: 140px;
+    }
+    .work-mode-option:hover, .work-mode-option.selected {
+      background: rgba(255,255,255,0.25);
+      transform: translateY(-4px);
+    }
+    .work-mode-icon { font-size: 2rem; margin-bottom: 8px; }
+    .work-mode-label { font-weight: 600; font-size: 1.0rem; color: #fff; }
+    .work-mode-desc { font-size: 0.8rem; color: rgba(255,255,255,0.8); margin-top: 6px; }
+    #cameraContainer {
+      display: none;
+      margin-top: 20px;
+    }
+    #videoFeed {
+      width: 100%;
+      max-width: 500px;
+      height: auto;
+      border-radius: 12px;
+      border: 2px solid #667eea;
+      background: #000;
+    }
+    .camera-error {
+      color: #ffb3b3;
+      background: rgba(220, 53, 69, 0.2);
+      padding: 12px;
+      border-radius: 8px;
+      margin: 16px 0;
+      display: none;
+      font-size: 0.85rem;
+    }
+    .location-radius-display {
+      display: none;
+      margin: 16px auto;
+      padding: 12px;
+      border-radius: 10px;
+      max-width: 500px;
+      text-align: center;
+      font-weight: 600;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      background: rgba(255,255,255,0.15);
+    }
+    .location-radius-title {
+      font-size: 1.0rem;
+      margin-bottom: 8px;
+    }
+    .location-radius-status {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+    }
+    .location-radius-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .location-radius-green { background-color: #28a745; }
+    .location-radius-yellow { background-color: #ffc107; }
+    .location-radius-red { background-color: #dc3545; }
+    .location-radius-distance {
+      font-weight: bold;
+      margin-left: 6px;
+    }
+    .scan-close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.4);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    .scan-close-btn:hover {
+      background: rgba(0,0,0,0.6);
+    }
+    .scan-main-btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 16px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      color: white;
+      margin-top: 15px;
+      background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+    }
+    .scan-main-btn:hover {
+      transform: translateY(-2px);
+    }
+    .scan-main-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 60px;
+      }
+      .sidebar.expanded {
+        width: 220px;
+      }
+      .sidebar:not(.expanded) .logo-text,
+      .sidebar:not(.expanded) .user-details,
+      .sidebar:not(.expanded) .nav-item span {
+        display: none;
+      }
+      .sidebar:not(.expanded) .nav-item {
+        justify-content: center;
+        padding: 12px;
+        gap: 0;
+      }
+      .main-content {
+        margin-left: 60px;
+        padding: 12px;
+      }
+      .sidebar.expanded ~ .main-content {
+        margin-left: 220px;
+      }
+      .container {
+        padding: 16px;
+      }
+      #locationMap {
+        height: 200px;
+      }
+      .form-title {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon"><i class="fas fa-user-clock"></i></div>
+        <div class="logo-text">Attendance</div>
+      </div>
+      <button class="toggle-btn" id="toggleSidebar">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+    <div class="nav-links" id="navLinks"></div>
+    <div class="user-info">
+      <div class="avatar" id="sidebarAvatar">U</div>
+      <div class="user-details">
+        <div class="user-name" id="sidebarUserName">Loading...</div>
+        <div class="user-email" id="sidebarUserEmail">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+      <div class="header">
+        <div>
+          <h1 class="form-title">Attendance Log</h1>
+          <div class="date-controls">
+            <button id="prevDayBtn" class="nav-btn"><i class="fas fa-chevron-left"></i></button>
+            <input type="date" id="datePicker" class="date-picker">
+            <button id="nextDayBtn" class="nav-btn"><i class="fas fa-chevron-right"></i></button>
+            <div id="currentDateDisplay" class="current-date-display"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <!-- Scan Face = Check In -->
+          <button id="scanBtn" class="scan-btn">
+            <i class="fas fa-camera"></i> Scan Face (In)
+          </button>
+          <!-- Check Out button (NO face scan) -->
+          <button id="checkoutBtn" class="checkout-btn">
+            <i class="fas fa-door-open"></i> Check Out
+          </button>
+        </div>
+      </div>
+
+      <div id="message" class="message"></div>
+
+      <table class="attendance-table" id="attendanceTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Punch In Time</th>
+            <th>Punch Out Time</th>
+            <th>Status</th>
+            <th>Location</th>
+          </tr>
+        </thead>
+        <tbody id="attendanceBody"></tbody>
+      </table>
+
+      <div id="emptyState" class="message" style="display:none;">
+        No attendance records found for this date
+      </div>
+
+      <div id="locationMap"></div>
+      <div id="locationInfo"></div>
+      <div id="locationStatusDisplay"></div>
+    </div>
+  </div>
+
+  <!-- 🔥 Scan Overlay (Work Mode + Camera) ONLY for Check-In -->
+  <div class="scan-overlay" id="scanOverlay">
+    <div class="scan-ui">
+      <button class="scan-close-btn" id="scanCloseBtn">✕ Close</button>
+      <h3 id="scanTitle">Face Scan (Check In)</h3>
+      <p class="subtitle" id="scanSubtitle">Select your work mode and position your face clearly in the frame.</p>
+
+      <!-- Work Mode Selection -->
+      <div class="work-mode-selection" id="workModeSelection">
+        <div class="work-mode-options">
+          <div class="work-mode-option" id="wfoOption" data-mode="wfo">
+            <div class="work-mode-icon"><i class="fas fa-building"></i></div>
+            <div class="work-mode-label">Work From Office (WFO)</div>
+            <div class="work-mode-desc">At company premises</div>
+          </div>
+          <div class="work-mode-option" id="wfhOption" data-mode="wfh">
+            <div class="work-mode-icon"><i class="fas fa-home"></i></div>
+            <div class="work-mode-label">Work From Home (WFH)</div>
+            <div class="work-mode-desc">At your registered location</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="cameraContainer">
+        <div id="cameraError" class="camera-error"></div>
+        <video id="videoFeed" autoplay playsinline muted></video>
+
+        <div id="locationRadiusDisplay" class="location-radius-display">
+          <div class="location-radius-title">Location Status</div>
+          <div class="location-radius-status">
+            <div class="location-radius-dot" id="locationRadiusDot"></div>
+            <span id="locationRadiusText">Getting location...</span>
+            <span class="location-radius-distance" id="locationRadiusDistance"></span>
+          </div>
+        </div>
+
+        <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+        <button id="captureBtn" class="scan-main-btn">
+          <i class="fas fa-bolt"></i> Capture & Recognize
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      collection,
+      query,
+      where,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+
+    // ===== FIREBASE CONFIG =====
+    const firebaseConfig = {
+      apiKey:"AIzaSyB3nU-WVQ-7zm9RijUhj420QPET9GYQpj8",
+      authDomain:"login-form-84016.firebaseapp.com",
+      projectId:"login-form-84016",
+      storageBucket:"login-form-84016.firebasestorage.app",
+      messagingSenderId:"568483509830",
+      appId:"1:568483509830:web:0d6de2a1537154bd67fc47",
+      measurementId:"G-KCGTMGB6HB"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    // ===== DOM ELEMENTS =====
+    const navLinks           = document.getElementById("navLinks");
+    const sidebarAvatar      = document.getElementById("sidebarAvatar");
+    const sidebarUserName    = document.getElementById("sidebarUserName");
+    const sidebarUserEmail   = document.getElementById("sidebarUserEmail");
+    const scanBtn            = document.getElementById("scanBtn");
+    const checkoutBtn        = document.getElementById("checkoutBtn");
+    const messageDiv         = document.getElementById("message");
+    const attendanceBody     = document.getElementById("attendanceBody");
+    const emptyState         = document.getElementById("emptyState");
+    const table              = document.getElementById("attendanceTable");
+    const datePicker         = document.getElementById("datePicker");
+    const currentDateDisplay = document.getElementById("currentDateDisplay");
+    const prevDayBtn         = document.getElementById("prevDayBtn");
+    const nextDayBtn         = document.getElementById("nextDayBtn");
+    const loadingOverlay     = document.getElementById("loadingOverlay");
+    const locationMapDiv     = document.getElementById("locationMap");
+    const locationInfoDiv    = document.getElementById("locationInfo");
+    const locationStatusDiv  = document.getElementById("locationStatusDisplay");
+
+    // Scan overlay elements
+    const scanOverlay        = document.getElementById("scanOverlay");
+    const scanCloseBtn       = document.getElementById("scanCloseBtn");
+    const scanTitle          = document.getElementById("scanTitle");
+    const scanSubtitle       = document.getElementById("scanSubtitle");
+    const workModeSelection  = document.getElementById("workModeSelection");
+    const wfoOption          = document.getElementById("wfoOption");
+    const wfhOption          = document.getElementById("wfhOption");
+    const cameraContainer    = document.getElementById("cameraContainer");
+    const videoFeed          = document.getElementById("videoFeed");
+    const canvas             = document.getElementById("canvas");
+    const captureBtn         = document.getElementById("captureBtn");
+    const cameraErrorDiv     = document.getElementById("cameraError");
+    const locationRadiusDisplay = document.getElementById("locationRadiusDisplay");
+    const locationRadiusDot  = document.getElementById("locationRadiusDot");
+    const locationRadiusText = document.getElementById("locationRadiusText");
+    const locationRadiusDistance = document.getElementById("locationRadiusDistance");
+
+    let allRecords = [];
+    let currentDate = new Date();
+    let currentUid  = null;
+    let attendanceMap = null;
+
+    // For scan logic
+    let stream = null;
+    let selectedWorkMode = null; // 'wfo' or 'wfh'
+    let homeLocation = { lat: 3.205170, lng: 101.720107 };
+    const OFFICE_LAT = 3.205170;
+    const OFFICE_LNG = 101.720107;
+    const WFO_RADIUS = 100;
+    const WFH_RADIUS = 500;
+    let isProcessing = false;
+    let locationWatchId = null;
+
+    // ===== SIDEBAR TOGGLE =====
+    document.getElementById('toggleSidebar').addEventListener('click', function() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('expanded');
+      const icon = this.querySelector('i');
+      icon.className = sidebar.classList.contains('expanded')
+        ? 'fas fa-chevron-left'
+        : 'fas fa-chevron-right';
+    });
+
+    // ===== HELPERS =====
+    function showLoading(text = "Processing...") {
+      loadingOverlay.style.display = "flex";
+      loadingOverlay.querySelector("p").textContent = text;
+    }
+    function hideLoading() {
+      loadingOverlay.style.display = "none";
+    }
+    function showMessage(text, type) {
+      messageDiv.textContent = text;
+      messageDiv.className = `message ${type}`;
+      messageDiv.style.display = 'block';
+      setTimeout(() => {
+        messageDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    function addNavLink(text, icon, link, isActive = false) {
+      const li = document.createElement("a");
+      li.className = `nav-item ${isActive ? 'active' : ''}`;
+      li.href = link;
+      li.innerHTML = `<i class="fas ${icon}"></i><span>${text}</span>`;
+      navLinks.appendChild(li);
+    }
+
+    function buildNavigation() {
+      navLinks.innerHTML = "";
+      addNavLink("Dashboard",      "fa-home",          "/dashboard");
+      addNavLink("Attendance Log", "fa-list",          "/attendance", true);
+      addNavLink("Leave Requests", "fa-calendar-alt",  "/leavecalendar");
+      addNavLink("Profile",        "fa-user",          "/profile");
+
+      const logout = document.createElement("a");
+      logout.className = "nav-item";
+      logout.href = "/";
+      logout.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>Logout</span>';
+      logout.addEventListener("click", (e) => {
+        e.preventDefault();
+        signOut(auth).then(() => window.location.href = "/");
+      });
+      navLinks.appendChild(logout);
+    }
+
+    function formatISO(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    // Convert "YYYY-MM-DD" -> "DD/MM/YYYY"
+    function isoToDisplay(isoStr) {
+      const [y,m,d] = isoStr.split('-');
+      return `${d}/${m}/${y}`;
+    }
+
+    function updateCurrentDateDisplay(dateObj) {
+      currentDateDisplay.textContent = dateObj.toLocaleDateString('en-GB', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    function getLocationStatusColor(text) {
+      if (!text) return 'location-status-red';
+      if (text.startsWith("At ")) return 'location-status-green';
+      if (text.startsWith("Near ")) return 'location-status-yellow';
+      return 'location-status-red';
+    }
+
+    // ===== LOAD ATTENDANCE RECORDS =====
+    async function loadAllAttendanceRecords() {
+      if (!currentUid) return;
+      showLoading("Loading attendance...");
+      try {
+        const q = query(collection(db, "attendance_test"), where("userId", "==", currentUid));
+        const querySnapshot = await getDocs(q);
+        allRecords = [];
+        querySnapshot.forEach(docSnap => {
+          allRecords.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        displayRecordsForDate(formatISO(currentDate));
+      } catch (e) {
+        console.error("Firestore error:", e);
+        showMessage("Failed to load attendance: " + e.message, "error");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function displayRecordsForDate(isoDateStr) {
+      const displayDateStr = isoToDisplay(isoDateStr); // "DD/MM/YYYY"
+
+      const recordsForDate = allRecords.filter(r => {
+        if (r.date) {
+          if (r.date.includes('/')) {
+            return r.date === displayDateStr;   // "DD/MM/YYYY"
+          } else if (r.date.includes('-')) {
+            return r.date === isoDateStr;       // "YYYY-MM-DD"
+          }
+        }
+        if (typeof r.timestamp === 'string') {
+          const d = new Date(r.timestamp);
+          return formatISO(d) === isoDateStr;
+        }
+        if (r.lastUpdated && typeof r.lastUpdated.toDate === 'function') {
+          const d = r.lastUpdated.toDate();
+          return formatISO(d) === isoDateStr;
+        }
+        return false;
+      });
+
+      recordsForDate.sort((a,b) => {
+        const da = a.lastUpdated && typeof a.lastUpdated.toDate === 'function'
+          ? a.lastUpdated.toDate()
+          : (a.timestamp ? new Date(a.timestamp) : 0);
+        const db = b.lastUpdated && typeof b.lastUpdated.toDate === 'function'
+          ? b.lastUpdated.toDate()
+          : (b.timestamp ? new Date(b.timestamp) : 0);
+        return db - da;
+      });
+
+      if (!recordsForDate.length) {
+        emptyState.style.display = 'block';
+        table.style.display      = 'none';
+        locationMapDiv.style.display    = 'none';
+        locationInfoDiv.style.display   = 'none';
+        locationStatusDiv.style.display = 'none';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      table.style.display      = 'table';
+      attendanceBody.innerHTML = '';
+
+      const latest = recordsForDate[0];
+      let lat = null, lng = null;
+
+      if (latest.checkInLocation && typeof latest.checkInLocation.latitude === 'number') {
+        lat = latest.checkInLocation.latitude;
+        lng = latest.checkInLocation.longitude;
+      } else if (typeof latest.latitude === 'number' && typeof latest.longitude === 'number') {
+        lat = latest.latitude;
+        lng = latest.longitude;
+      }
+
+      if (lat != null && lng != null) {
+        if (attendanceMap) {
+          attendanceMap.remove();
+          attendanceMap = null;
+        }
+        attendanceMap = L.map('locationMap').setView([lat, lng], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(attendanceMap);
+
+        const popupContent = `
+          <b>${latest.userName || latest.name || 'Unknown'}</b><br>
+          <strong>${latest.checkInStatus || latest.locationType || ''}</strong><br>
+          <em>${latest.date || displayDateStr}</em>
+        `;
+        L.marker([lat, lng]).addTo(attendanceMap).bindPopup(popupContent).openPopup();
+        L.circle([lat, lng], {
+          color: '#667eea',
+          fillColor: '#667eea',
+          fillOpacity: 0.2,
+          radius: 50
+        }).addTo(attendanceMap);
+
+        locationMapDiv.style.display = 'block';
+
+        const distanceText = latest.checkInDistance ? `${latest.checkInDistance} m` : '-';
+        locationInfoDiv.innerHTML = `
+          <strong>📍 Location Type:</strong> ${latest.locationType || '-'}<br>
+          <strong>Status:</strong> ${latest.checkInStatus || '-'}<br>
+          <strong>Distance:</strong> ${distanceText}
+        `;
+        locationInfoDiv.style.display = 'block';
+
+        const locStatusText  = latest.checkInStatus || latest.locationType || 'Unknown';
+        const statusColorCls = getLocationStatusColor(locStatusText);
+        locationStatusDiv.innerHTML = `
+          <strong>📍 Location Status:</strong>
+          <span class="location-status-text">
+            <span class="location-status-dot ${statusColorCls}"></span>
+            ${locStatusText}
+          </span>
+        `;
+        locationStatusDiv.style.display = 'block';
+      } else {
+        locationMapDiv.style.display    = 'none';
+        locationInfoDiv.style.display   = 'none';
+        locationStatusDiv.style.display = 'none';
+      }
+
+      recordsForDate.forEach(r => {
+        const dateText  = r.date || displayDateStr;
+        const inTime    = r.checkIn  || r.time || '-';
+        const outTime   = r.checkOut || '-';
+        const statusLbl = r.checkInTimeStatus || r.status || 'Unknown';
+
+        const statusClass = statusLbl.toLowerCase().includes('on time') ? 'on-time'
+                           : statusLbl.toLowerCase().includes('late')   ? 'late'
+                           : 'late';
+
+        const locationText = r.checkInStatus || r.locationType || '-';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.userName || r.name || 'N/A'}</td>
+          <td>${dateText}</td>
+          <td>${inTime}</td>
+          <td>${outTime}</td>
+          <td><span class="status ${statusClass}">${statusLbl}</span></td>
+          <td>${locationText}</td>
+        `;
+        attendanceBody.appendChild(tr);
+      });
+    }
+
+    // ===== DATE CONTROLS =====
+    datePicker.addEventListener('change', () => {
+      if (!datePicker.value) return;
+      currentDate = new Date(datePicker.value);
+      updateCurrentDateDisplay(currentDate);
+      displayRecordsForDate(datePicker.value);
+    });
+
+    prevDayBtn.addEventListener('click', () => {
+      currentDate.setDate(currentDate.getDate() - 1);
+      const iso = formatISO(currentDate);
+      datePicker.value = iso;
+      updateCurrentDateDisplay(currentDate);
+      displayRecordsForDate(iso);
+    });
+
+    nextDayBtn.addEventListener('click', () => {
+      currentDate.setDate(currentDate.getDate() + 1);
+      const iso = formatISO(currentDate);
+      datePicker.value = iso;
+      updateCurrentDateDisplay(currentDate);
+      displayRecordsForDate(iso);
+    });
+
+    // ===== SCAN OVERLAY CONTROL (CHECK-IN ONLY) =====
+    function openScanOverlay() {
+      scanTitle.textContent = "Face Scan (Check In)";
+      scanSubtitle.textContent = "Select your work mode and position your face clearly in the frame.";
+
+      selectedWorkMode = null;
+      wfoOption.classList.remove("selected");
+      wfhOption.classList.remove("selected");
+      cameraErrorDiv.style.display = "none";
+      locationRadiusDisplay.style.display = "none";
+      cameraContainer.style.display = "none";
+      workModeSelection.style.display = "block";
+
+      scanOverlay.classList.add("active");
+    }
+
+    function closeScanOverlay() {
+      scanOverlay.classList.remove("active");
+      stopCamera();
+    }
+
+    scanBtn.addEventListener("click", () => openScanOverlay());
+    scanCloseBtn.addEventListener("click", closeScanOverlay);
+
+    // ===== LOCATION & CAMERA HELPERS =====
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371e3;
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lon2-lon1) * Math.PI/180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    function getLocationStatusText(distance, mode) {
+      if (mode === 'wfo') {
+        if (distance < 50) return "At Office";
+        else if (distance < 500) return "Near Office";
+        else return "Far from Office";
+      } else {
+        if (distance < 50) return "At Home";
+        else if (distance < 500) return "Near Home";
+        else return "Far from Home";
+      }
+    }
+
+    function getLocationStatus(distance, mode) {
+      const text = getLocationStatusText(distance, mode);
+      let color = 'red';
+      const allowed = (mode === 'wfo') ? WFO_RADIUS : WFH_RADIUS;
+
+      if (distance <= allowed) {
+        color = 'green';
+      } else if (distance <= 500) {
+        color = 'yellow';
+      }
+      return {
+        text,
+        color,
+        distance: `${distance.toFixed(1)}m`
+      };
+    }
+
+    function validateLocation(lat, lng) {
+      if (!selectedWorkMode) return { valid: false, message: "Please select a work mode first." };
+      const distance = selectedWorkMode === 'wfo'
+        ? calculateDistance(OFFICE_LAT, OFFICE_LNG, lat, lng)
+        : calculateDistance(homeLocation.lat, homeLocation.lng, lat, lng);
+      const allowed = selectedWorkMode === 'wfo' ? WFO_RADIUS : WFH_RADIUS;
+      if (distance <= allowed) {
+        return { valid: true, message: `You are ${distance.toFixed(1)}m from ${selectedWorkMode === 'wfo' ? 'office' : 'home'}` };
+      } else {
+        return { valid: false, message: `You are ${distance.toFixed(1)}m away. Must be within ${allowed}m for ${selectedWorkMode.toUpperCase()}.` };
+      }
+    }
+
+    function updateLocationRadiusDisplay(lat, lng) {
+      if (!selectedWorkMode) {
+        locationRadiusDisplay.style.display = 'none';
+        return;
+      }
+      const distance = selectedWorkMode === 'wfo'
+        ? calculateDistance(OFFICE_LAT, OFFICE_LNG, lat, lng)
+        : calculateDistance(homeLocation.lat, homeLocation.lng, lat, lng);
+
+      const status = getLocationStatus(distance, selectedWorkMode);
+      locationRadiusDisplay.style.display = 'block';
+      locationRadiusText.textContent = status.text;
+      locationRadiusDistance.textContent = status.distance;
+      locationRadiusDot.className = 'location-radius-dot';
+      locationRadiusDot.classList.add(
+        status.color === 'green'
+          ? 'location-radius-green'
+          : status.color === 'yellow'
+          ? 'location-radius-yellow'
+          : 'location-radius-red'
+      );
+    }
+
+    function startLocationTracking() {
+      if (!navigator.geolocation) {
+        locationRadiusDisplay.style.display = 'block';
+        locationRadiusText.textContent = "Location not supported by browser";
+        locationRadiusDot.className = 'location-radius-dot location-radius-red';
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          updateLocationRadiusDisplay(latitude, longitude);
+
+          if (locationWatchId) {
+            navigator.geolocation.clearWatch(locationWatchId);
+          }
+          locationWatchId = navigator.geolocation.watchPosition(
+            (p) => updateLocationRadiusDisplay(p.coords.latitude, p.coords.longitude),
+            (e) => console.warn("Location tracking error:", e),
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+          );
+        },
+        (e) => {
+          locationRadiusDisplay.style.display = 'block';
+          locationRadiusText.textContent = "Location unavailable";
+          locationRadiusDot.className = 'location-radius-dot location-radius-red';
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    }
+
+    async function startCamera() {
+      try {
+        if (stream) stream.getTracks().forEach(track => track.stop());
+        const constraints = {
+          video: {
+            facingMode: "user",
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          },
+          audio: false
+        };
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoFeed.srcObject = stream;
+        videoFeed.onloadedmetadata = () => videoFeed.play();
+        videoFeed.onerror = () => showCameraError("Failed to start camera.");
+        startLocationTracking();
+      } catch (err) {
+        let msg = "Camera access denied or not available.";
+        if (err.name === "NotAllowedError") msg = "Please allow camera access in browser settings.";
+        else if (err.name === "NotFoundError") msg = "No camera found.";
+        else if (err.name === "NotReadableError") msg = "Camera in use by another app.";
+        showCameraError(msg);
+        stopCamera();
+      }
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      if (locationWatchId) {
+        navigator.geolocation.clearWatch(locationWatchId);
+        locationWatchId = null;
+      }
+      cameraErrorDiv.style.display = 'none';
+      locationRadiusDisplay.style.display = 'none';
+    }
+
+    function showCameraError(text) {
+      cameraErrorDiv.textContent = text;
+      cameraErrorDiv.style.display = 'block';
+      setTimeout(() => cameraErrorDiv.style.display = 'none', 5000);
+    }
+
+    async function handleWorkModeSelection(mode) {
+      selectedWorkMode = mode;
+      wfoOption.classList.toggle('selected', mode === 'wfo');
+      wfhOption.classList.toggle('selected', mode === 'wfh');
+
+      if (mode === 'wfh') {
+        showLoading("Detecting and saving your home location...");
+        try {
+          const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 15000,
+              maximumAge: 0
+            });
+          });
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          const accuracy = position.coords.accuracy;
+
+          if (accuracy > 100) {
+            const confirmed = confirm(
+              `⚠️ Location accuracy is low (${accuracy.toFixed(0)}m).\n` +
+              `Detected: ${lat.toFixed(6)}, ${lng.toFixed(6)}\n` +
+              `Continue anyway?`
+            );
+            if (!confirmed) {
+              hideLoading();
+              selectedWorkMode = null;
+              wfhOption.classList.remove('selected');
+              return;
+            }
+          }
+          homeLocation = { lat, lng };
+        } catch (err) {
+          console.error("Auto-save location error:", err);
+          let msg = "Failed to get location. Please ensure location services are enabled.";
+          if (err.code === 1) msg = "Location permission denied.";
+          showCameraError(msg);
+          selectedWorkMode = null;
+          wfhOption.classList.remove('selected');
+          hideLoading();
+          return;
+        }
+      }
+      hideLoading();
+      workModeSelection.style.display = 'none';
+      cameraContainer.style.display = 'block';
+      startCamera();
+    }
+
+    wfoOption.addEventListener('click', () => handleWorkModeSelection('wfo'));
+    wfhOption.addEventListener('click', () => handleWorkModeSelection('wfh'));
+
+    // 🔥 FACE CAPTURE & RECOGNITION – CHECK-IN ONLY
+    captureBtn.addEventListener('click', async () => {
+      if (isProcessing) return;
+      isProcessing = true;
+      captureBtn.disabled = true;
+      captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+      if (!videoFeed.srcObject || videoFeed.videoWidth === 0) {
+        showCameraError("Camera is not ready.");
+        isProcessing = false;
+        captureBtn.disabled = false;
+        captureBtn.innerHTML = '<i class="fas fa-bolt"></i> Capture & Recognize';
+        return;
+      }
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
+      const img = canvas.toDataURL('image/png');
+
+      let lat = null, lng = null;
+      showLoading("Getting your location...");
+      try {
+        const pos = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
+          });
+        });
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch (err) {
+        hideLoading();
+        showCameraError("Location access denied. Please enable location services.");
+        stopCamera();
+        isProcessing = false;
+        captureBtn.disabled = false;
+        captureBtn.innerHTML = '<i class="fas fa-bolt"></i> Capture & Recognize';
+        return;
+      }
+
+      const validation = validateLocation(lat, lng);
+      if (!validation.valid) {
+        hideLoading();
+        showCameraError(validation.message);
+        stopCamera();
+        isProcessing = false;
+        captureBtn.disabled = false;
+        captureBtn.innerHTML = '<i class="fas fa-bolt"></i> Capture & Recognize';
+        return;
+      }
+
+      showLoading("Recognizing face...");
+      try {
+        const res = await fetch("/recognize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            image: img,
+            latitude: lat,
+            longitude: lng,
+            work_mode: selectedWorkMode,
+            home_lat: homeLocation.lat,
+            home_lng: homeLocation.lng,
+            action: "checkin"
+          })
+        });
+
+        const result = await res.json();
+
+        if (result.success && result.name) {
+          const firstName = result.name.split(' ')[0] || result.name;
+          alert(`Hai ${firstName}! You've checked in.`);
+          closeScanOverlay();
+          await loadAllAttendanceRecords();
+        } else {
+          alert(`❌ ${result.error || "Recognition failed. Please register first."}`);
+        }
+      } catch (err) {
+        console.error("Recognition error:", err);
+        alert("⚠️ Failed to process attendance.");
+      } finally {
+        hideLoading();
+        stopCamera();
+        isProcessing = false;
+        captureBtn.disabled = false;
+        captureBtn.innerHTML = '<i class="fas fa-bolt"></i> Capture & Recognize';
+      }
+    });
+
+    // ===== CHECK OUT BUTTON (NO FACE SCAN) =====
+    checkoutBtn.addEventListener("click", async () => {
+      if (!currentUid) {
+        alert("User not logged in.");
+        return;
+      }
+      const confirmOut = confirm("Confirm check out for today?");
+      if (!confirmOut) return;
+
+      showLoading("Checking out...");
+      let lat = null;
+      let lng = null;
+
+      try {
+        // optional location for checkout (will not block if fails)
+        const pos = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
+          });
+        });
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch (err) {
+        console.warn("Checkout location error (will proceed without location):", err);
+      }
+
+      try {
+        const res = await fetch("/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: currentUid,
+            latitude: lat,
+            longitude: lng
+          })
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert("You have checked out.");
+          await loadAllAttendanceRecords();
+        } else {
+          alert(`❌ ${result.error || "Failed to check out."}`);
+        }
+      } catch (err) {
+        console.error("Checkout error:", err);
+        alert("⚠️ Failed to process check out.");
+      } finally {
+        hideLoading();
+      }
+    });
+
+    // ===== AUTH STATE =====
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUid = user.uid;
+        const docSnap = await getDoc(doc(db, "users", user.uid));
+        if (docSnap.exists()) {
+          const u = docSnap.data();
+          sidebarUserName.textContent = u.firstName || "User";
+          sidebarUserEmail.textContent = u.email || user.email;
+
+          const initials =
+            (u.firstName?.charAt(0) || '') +
+            (u.lastName?.charAt(0)  || '');
+          sidebarAvatar.textContent = initials || 'U';
+        } else {
+          sidebarUserName.textContent = "User";
+          sidebarUserEmail.textContent = user.email || "";
+          sidebarAvatar.textContent = "U";
+        }
+
+        buildNavigation();
+
+        const todayIso = formatISO(currentDate);
+        datePicker.value = todayIso;
+        updateCurrentDateDisplay(currentDate);
+        loadAllAttendanceRecords();
+      } else {
+        window.location.href = "/";
+      }
+    });
+  </script>
+</body>
+</html>

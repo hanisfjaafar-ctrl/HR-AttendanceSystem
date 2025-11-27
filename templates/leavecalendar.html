@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Leave Calendar</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      min-height: 100vh;
+      padding: 0;
+      overflow-x: hidden;
+      display: flex;
+    }
+    
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 140px;
+      background: rgba(255, 255, 255, 0.95);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      box-shadow: 3px 0 15px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(10px);
+    }
+
+    .sidebar.expanded {
+      width: 220px;
+    }
+
+    .sidebar-header {
+      padding: 15px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #eee;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #333;
+      white-space: nowrap;
+    }
+
+    .sidebar:not(.expanded) .logo-text {
+      display: none;
+    }
+
+    .toggle-btn {
+      background: none;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #667eea;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .toggle-btn:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .nav-links {
+      padding: 12px 0;
+      flex: 1;
+    }
+
+    .nav-item {
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #555;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      border-left: 3px solid #667eea;
+    }
+
+    .nav-item i {
+      font-size: 1rem;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar:not(.expanded) .nav-item span {
+      display: none;
+    }
+
+    .sidebar:not(.expanded) .nav-item {
+      justify-content: center;
+      padding: 12px;
+      gap: 0;
+    }
+
+    .user-info {
+      padding: 12px;
+      border-top: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9rem;
+    }
+
+    .user-email {
+      font-size: 0.75rem;
+      color: #777;
+    }
+
+    .sidebar:not(.expanded) .user-details {
+      display: none;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      padding: 15px;
+      margin-left: 140px;
+      transition: margin-left 0.3s ease;
+    }
+
+    .sidebar.expanded ~ .main-content {
+      margin-left: 220px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 2px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 1px;
+    }
+
+    /* ===== GOOGLE CALENDAR ===== */
+    .google-calendar-container {
+      background: white;
+      border-radius: 15px;
+      padding: 18px;
+      margin-bottom: 25px;
+      box-shadow: 0 6px 18px rgba(102, 126, 234, 0.15);
+      border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .calendar-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .calendar-section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #2c3e50;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .calendar-source {
+      font-size: 0.8rem;
+      color: #7f8c8d;
+    }
+
+    .google-calendar-iframe {
+      border: none;
+      border-radius: 12px;
+      width: 100%;
+      height: 400px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    }
+
+    /* ===== LEAVE SECTIONS ===== */
+    .leave-sections {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .section-card {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      border-top: 3px solid #667eea;
+    }
+
+    .my-leave-card { border-top-color: #28a745; }
+    .team-leave-card { border-top-color: #ff6b6b; }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .team-count {
+      background: #ffecf0;
+      color: #e74c3c;
+      padding: 3px 10px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .apply-btn {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 8px rgba(40, 167, 69, 0.25);
+    }
+
+    .apply-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+    }
+
+    .leave-list {
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .leave-list::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .leave-list::-webkit-scrollbar-track {
+      background: #f1f3f5;
+      border-radius: 8px;
+    }
+
+    .leave-list::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 8px;
+    }
+
+    .leave-item {
+      padding: 12px;
+      background: #f8fafc;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      border-left: 2px solid #667eea;
+    }
+
+    .my-leave-card .leave-item { border-left-color: #28a745; }
+    .team-leave-card .leave-item { border-left-color: #ff6b6b; }
+
+    .leave-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .leave-type {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #2d3748;
+    }
+
+    .leave-dates {
+      font-size: 0.8rem;
+      color: #718096;
+    }
+
+    .leave-status {
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-pending {
+      background: rgba(255, 193, 7, 0.2);
+      color: #FFC107;
+      border: 1px solid rgba(255, 193, 7, 0.3);
+    }
+
+    .status-approved {
+      background: rgba(40, 167, 69, 0.2);
+      color: #28A745;
+      border: 1px solid rgba(40, 167, 69, 0.3);
+    }
+
+    .status-rejected {
+      background: rgba(220, 53, 69, 0.2);
+      color: #DC3545;
+      border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #a0aec0;
+      padding: 20px;
+      font-style: italic;
+      font-size: 0.95rem;
+    }
+
+    /* ===== MODAL ===== */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 450px;
+      padding: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .modal-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #444;
+      font-size: 0.9rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e1e5e9;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-secondary {
+      background: #f1f3f5;
+      color: #495057;
+    }
+
+    .btn-secondary:hover {
+      background: #e9ecef;
+    }
+
+    /* ===== LOADING OVERLAY ===== */
+    #loadingOverlay {
+      position: fixed;
+      top: 0; 
+      left: 0;
+      width: 100%; 
+      height: 100%;
+      background: rgba(102, 126, 234, 0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
+      color: #fff;
+      font-size: 16px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid #fff;
+      border-radius: 50%;
+      width: 40px; 
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* ===== RESPONSIVE BEHAVIOR (MATCHES ADMIN) ===== */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 60px;
+      }
+
+      .sidebar.expanded {
+        width: 220px;
+      }
+
+      .sidebar:not(.expanded) .logo-text,
+      .sidebar:not(.expanded) .user-details,
+      .sidebar:not(.expanded) .nav-item span {
+        display: none;
+      }
+
+      .sidebar:not(.expanded) .nav-item {
+        justify-content: center;
+        padding: 12px;
+        gap: 0;
+      }
+
+      .main-content {
+        margin-left: 60px;
+        padding: 12px;
+      }
+
+      .sidebar.expanded ~ .main-content {
+        margin-left: 220px;
+      }
+
+      .container {
+        padding: 16px;
+      }
+
+      .google-calendar-iframe {
+        height: 350px;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon">
+          <i class="fas fa-user-clock"></i>
+        </div>
+        <div class="logo-text">Attendance</div>
+      </div>
+      <button class="toggle-btn" id="toggleSidebar">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+    </div>
+    
+    <div class="nav-links" id="navLinks">
+      <!-- Populated by JS -->
+    </div>
+    
+    <div class="user-info">
+      <div class="avatar" id="sidebarAvatar">U</div>
+      <div class="user-details">
+        <div class="user-name" id="sidebarUserName">Loading...</div>
+        <div class="user-email" id="sidebarUserEmail">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+      <h2>Leave Calendar</h2>
+
+      <div class="google-calendar-container">
+        <div class="calendar-section-header">
+          <h3 class="calendar-section-title">Public Holidays in Malaysia</h3>
+          <span class="calendar-source">Google Calendar</span>
+        </div>
+        <div class="google-calendar-wrapper">
+          <iframe 
+            src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=Asia%2FKuala_Lumpur&showPrint=0&src=ZW4ubWFsYXlzaWEjaG9saWRheUBncm91cC52LmNhbGVuZGFyLmdvb2dsZS5jb20&color=%230b8043" 
+            class="google-calendar-iframe"
+            frameborder="0" 
+            scrolling="no">
+          </iframe>
+        </div>
+      </div>
+
+      <div class="leave-sections">
+        <div class="section-card my-leave-card">
+          <div class="section-header">
+            <h3 class="section-title">My Leave Requests</h3>
+            <button class="apply-btn" id="applyLeaveBtn">
+              <i class="fas fa-plus"></i> Apply
+            </button>
+          </div>
+          <div class="leave-list" id="myLeaveList">
+            <p class="empty-state">No leave requests found</p>
+          </div>
+        </div>
+
+        <div class="section-card team-leave-card">
+          <div class="section-header">
+            <h3 class="section-title">Team Calendar</h3>
+            <span class="team-count" id="teamLeaveCount">0 active</span>
+          </div>
+          <div class="leave-list" id="teamLeaveList">
+            <p class="empty-state">No team leave requests found</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Apply Leave Modal -->
+  <div class="modal" id="applyLeaveModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Apply for Leave</h3>
+        <button class="close-modal" id="closeModal">&times;</button>
+      </div>
+      <form id="leaveForm">
+        <div class="form-group">
+          <label for="leaveType">Leave Type</label>
+          <select id="leaveType" required>
+            <option value="">Select leave type</option>
+            <option value="annual">Annual Leave</option>
+            <option value="sick">Sick Leave</option>
+            <option value="personal">Personal Leave</option>
+            <option value="maternity">Maternity Leave</option>
+            <option value="paternity">Paternity Leave</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="startDate">Start Date</label>
+          <input type="date" id="startDate" required>
+        </div>
+        <div class="form-group">
+          <label for="endDate">End Date</label>
+          <input type="date" id="endDate" required>
+        </div>
+        <div class="form-group">
+          <label for="reason">Reason</label>
+          <textarea id="reason" rows="3" placeholder="Reason for leave"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelLeave">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading your leave calendar...</p>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    // ✅ Unified responsive sidebar toggle (matches admin behavior)
+    document.getElementById('toggleSidebar').addEventListener('click', function() {
+      const sidebar = document.querySelector('.sidebar');
+      const isMobile = window.innerWidth <= 768;
+      
+      if (isMobile) {
+        // On mobile: toggle between 60px and 220px
+        sidebar.classList.toggle('expanded');
+      } else {
+        // On desktop: toggle between 140px and 220px
+        sidebar.classList.toggle('expanded');
+      }
+      
+      const icon = this.querySelector('i');
+      icon.className = sidebar.classList.contains('expanded') 
+        ? 'fas fa-chevron-left' 
+        : 'fas fa-chevron-right';
+    });
+
+    // Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      addDoc, 
+      query, 
+      where, 
+      onSnapshot, 
+      doc, 
+      getDoc 
+    } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3nU-WVQ-7zm9RijUhj420QPET9GYQpj8",
+      authDomain: "login-form-84016.firebaseapp.com",
+      projectId: "login-form-84016",
+      storageBucket: "login-form-84016.firebasestorage.app",
+      messagingSenderId: "568483509830",
+      appId: "1:568483509830:web:0d6de2a1537154bd67fc47",
+      measurementId: "G-KCGTMGB6HB"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+
+    let currentUid = null;
+    let currentUserData = null;
+
+    const myLeaveList = document.getElementById('myLeaveList');
+    const teamLeaveList = document.getElementById('teamLeaveList');
+    const teamLeaveCountEl = document.getElementById('teamLeaveCount');
+    const applyLeaveBtn = document.getElementById('applyLeaveBtn');
+    const applyLeaveModal = document.getElementById('applyLeaveModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelLeave = document.getElementById('cancelLeave');
+    const leaveForm = document.getElementById('leaveForm');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const sidebarAvatar = document.getElementById("sidebarAvatar");
+    const sidebarUserName = document.getElementById("sidebarUserName");
+    const sidebarUserEmail = document.getElementById("sidebarUserEmail");
+    const navLinks = document.getElementById("navLinks");
+
+    function addNavLink(text, icon, link, isActive = false) {
+      const a = document.createElement("a");
+      a.className = `nav-item ${isActive ? 'active' : ''}`;
+      a.href = link;
+      a.innerHTML = `<i class="fas ${icon}"></i><span>${text}</span>`;
+      navLinks.appendChild(a);
+    }
+
+    function buildNavigation(role) {
+      navLinks.innerHTML = '';
+      if (role === "admin") {
+        addNavLink("Dashboard", "fa-home", "admin-dashboard");
+        addNavLink("Staff Management", "fa-users", "/manage-staff");
+        addNavLink("Attendance Log", "fa-list", "/admin-attendancelog");
+        addNavLink("Leave Calendar", "fa-calendar-alt", "/admin-leavecalendar", true);
+        addNavLink("Live Location", "fa-location-dot", "/admin-liveloc");
+        addNavLink("Profile", "fa-user", "/profile");
+      } else {
+        addNavLink("Dashboard", "fa-home", "/dashboard");
+        addNavLink("Attendance Log", "fa-list", "/attendance");
+        addNavLink("Leave Calendar", "fa-calendar-alt", "/leavecalendar", true);
+        addNavLink("Profile", "fa-user", "/profile");
+      }
+      const logout = document.createElement("a");
+      logout.className = "nav-item";
+      logout.href = "#";
+      logout.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>Logout</span>';
+      logout.addEventListener("click", (e) => {
+        e.preventDefault();
+        signOut(auth).then(() => window.location.href = "/");
+      });
+      navLinks.appendChild(logout);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('startDate').min = today;
+      document.getElementById('endDate').min = today;
+      
+      applyLeaveBtn.addEventListener('click', () => applyLeaveModal.style.display = 'flex');
+      closeModal.addEventListener('click', () => applyLeaveModal.style.display = 'none');
+      cancelLeave.addEventListener('click', () => applyLeaveModal.style.display = 'none');
+      
+      leaveForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitLeaveRequest();
+      });
+      
+      window.addEventListener('click', (e) => {
+        if (e.target === applyLeaveModal) applyLeaveModal.style.display = 'none';
+      });
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUid = user.uid;
+        try {
+          const userDoc = await getDoc(doc(db, "users", currentUid));
+          if (userDoc.exists()) {
+            currentUserData = userDoc.data();
+            updateSidebarUI(currentUserData);
+            buildNavigation(currentUserData.role || "user");
+          }
+        } catch (err) {
+          console.error("Error fetching user:", err);
+        }
+        setupLeaveListeners();
+        hideLoading();
+      } else {
+        hideLoading();
+        window.location.href = "/";
+      }
+    });
+
+    function updateSidebarUI(userData) {
+      const firstName = userData.firstName || "";
+      const lastName = userData.lastName || "";
+      const email = userData.email || "";
+      const initials = ((firstName.charAt(0) + lastName.charAt(0)) || "U").toUpperCase();
+      sidebarUserName.textContent = firstName || "User";
+      sidebarUserEmail.textContent = email || "No email";
+      sidebarAvatar.textContent = initials;
+    }
+
+    function setupLeaveListeners() {
+      if (!currentUid) return;
+      
+      const myLeaveQuery = query(collection(db, "leaveRequests"), where("userId", "==", currentUid));
+      onSnapshot(myLeaveQuery, (snapshot) => {
+        const myLeaves = [];
+        snapshot.forEach(doc => myLeaves.push({ id: doc.id, ...doc.data() }));
+        renderMyLeaveRequests(myLeaves);
+      });
+      
+      const teamLeaveQuery = query(collection(db, "leaveRequests"), where("userId", "!=", currentUid));
+      onSnapshot(teamLeaveQuery, (snapshot) => {
+        const teamLeaves = [];
+        snapshot.forEach(doc => teamLeaves.push({ id: doc.id, ...doc.data() }));
+        renderTeamLeaveRequests(teamLeaves);
+      });
+    }
+
+    function renderMyLeaveRequests(leaves) {
+      myLeaveList.innerHTML = leaves.length === 0 
+        ? '<p class="empty-state">No leave requests found</p>'
+        : leaves.map(leave => `
+          <div class="leave-item">
+            <div class="leave-info">
+              <div class="leave-type">${leave.leaveType}</div>
+              <div class="leave-dates">${formatDate(leave.startDate)} – ${formatDate(leave.endDate)}</div>
+            </div>
+            <div class="leave-status status-${leave.status || 'pending'}">
+              ${(leave.status || 'Pending').charAt(0).toUpperCase() + (leave.status || 'pending').slice(1)}
+            </div>
+          </div>
+        `).join('');
+    }
+
+    function renderTeamLeaveRequests(leaves) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const activeLeaves = leaves.filter(leave => {
+        if (!leave.endDate) return false;
+        const endDate = new Date(leave.endDate);
+        endDate.setHours(0, 0, 0, 0);
+        return endDate >= today;
+      });
+      teamLeaveCountEl.textContent = `${activeLeaves.length} active`;
+      teamLeaveList.innerHTML = activeLeaves.length === 0 
+        ? '<p class="empty-state">No team leave requests found</p>'
+        : activeLeaves.map(leave => `
+          <div class="leave-item">
+            <div class="leave-info">
+              <div class="leave-type">${leave.userName || 'Team Member'} — ${leave.leaveType}</div>
+              <div class="leave-dates">${formatDate(leave.startDate)} – ${formatDate(leave.endDate)}</div>
+            </div>
+            <div class="leave-status status-${leave.status || 'approved'}">
+              ${(leave.status || 'Approved').charAt(0).toUpperCase() + (leave.status || 'approved').slice(1)}
+            </div>
+          </div>
+        `).join('');
+    }
+
+    async function submitLeaveRequest() {
+      if (!currentUid || !currentUserData) {
+        alert("User not authenticated.");
+        return;
+      }
+      const leaveType = document.getElementById('leaveType').value;
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const reason = document.getElementById('reason').value;
+      
+      if (!leaveType || !startDate || !endDate) {
+        alert("Please fill in all required fields.");
+        return;
+      }
+      if (new Date(startDate) > new Date(endDate)) {
+        alert("End date must be after start date.");
+        return;
+      }
+      
+      showLoading();
+      try {
+        await addDoc(collection(db, "leaveRequests"), {
+          userId: currentUid,
+          userName: `${currentUserData.firstName || ''} ${currentUserData.lastName || ''}`.trim() || "User",
+          leaveType,
+          startDate,
+          endDate,
+          reason,
+          status: "pending",
+          createdAt: new Date()
+        });
+        alert("Leave request submitted!");
+        applyLeaveModal.style.display = 'none';
+        leaveForm.reset();
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Failed to submit request.");
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return "N/A";
+      return new Date(dateStr).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+
+    function showLoading(msg = "Loading your leave calendar...") {
+      document.querySelector("#loadingOverlay p").textContent = msg;
+      loadingOverlay.style.display = 'flex';
+    }
+    
+    function hideLoading() {
+      loadingOverlay.style.display = 'none';
+    }
+  </script>
+</body>
+</html>
+

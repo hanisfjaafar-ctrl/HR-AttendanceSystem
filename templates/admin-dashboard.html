@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      min-height: 100vh;
+      padding: 0;
+      overflow-x: hidden;
+      display: flex;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 140px;
+      background: rgba(255, 255, 255, 0.95);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      box-shadow: 3px 0 15px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(10px);
+    }
+
+    .sidebar.expanded {
+      width: 220px;
+    }
+
+    .sidebar-header {
+      padding: 15px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #eee;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #333;
+      white-space: nowrap;
+    }
+
+    .sidebar:not(.expanded) .logo-text {
+      display: none;
+    }
+
+    .toggle-btn {
+      background: none;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #667eea;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .toggle-btn:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .nav-links {
+      padding: 12px 0;
+      flex: 1;
+    }
+
+    .nav-item {
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #555;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      border-left: 3px solid #667eea;
+    }
+
+    .nav-item i {
+      font-size: 1rem;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar:not(.expanded) .nav-item span {
+      display: none;
+    }
+
+    .sidebar:not(.expanded) .nav-item {
+      justify-content: center;
+      padding: 12px;
+      gap: 0;
+    }
+
+    .user-info {
+      padding: 12px;
+      border-top: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    .user-details {
+      flex: 1;
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9rem;
+    }
+
+    .user-email {
+      font-size: 0.75rem;
+      color: #777;
+    }
+
+    .sidebar:not(.expanded) .user-details {
+      display: none;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      padding: 15px;
+      margin-left: 140px;
+      transition: margin-left 0.3s ease;
+    }
+
+    .sidebar.expanded ~ .main-content {
+      margin-left: 220px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .welcome-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .welcome-header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .welcome-header p {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    /* Stats Cards */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      font-size: 18px;
+    }
+
+    .leave-icon {
+      background: rgba(255, 193, 7, 0.2);
+      color: #FFC107;
+    }
+
+    .late-icon {
+      background: rgba(220, 53, 69, 0.2);
+      color: #DC3545;
+    }
+
+    .attendance-icon {
+      background: rgba(40, 167, 69, 0.2);
+      color: #28A745;
+    }
+
+    .new-leave-icon {
+      background: rgba(0, 123, 255, 0.2);
+      color: #007BFF;
+    }
+
+    .stat-info h3 {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 6px;
+    }
+
+    .stat-info p {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #333;
+    }
+
+    /* Sections */
+    .section-card {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .apply-btn {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+    }
+
+    .apply-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Staff List */
+    .staff-list {
+      min-height: 60px;
+    }
+
+    .staff-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      align-items: center;
+    }
+
+    .staff-item:last-child {
+      border-bottom: none;
+    }
+
+    .staff-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .staff-name {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    .staff-details {
+      color: #666;
+      font-size: 0.8rem;
+    }
+
+    .staff-status {
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-absent {
+      background: rgba(220, 53, 69, 0.2);
+      color: #DC3545;
+    }
+
+    .status-on-leave {
+      background: rgba(0, 123, 255, 0.2);
+      color: #007BFF;
+    }
+
+    /* Leave Requests */
+    .leave-list {
+      min-height: 60px;
+    }
+
+    .leave-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .leave-item:last-child {
+      border-bottom: none;
+    }
+
+    .leave-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .leave-type {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    .leave-dates {
+      color: #666;
+      font-size: 0.8rem;
+    }
+
+    .leave-status {
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-pending {
+      background: rgba(255, 193, 7, 0.2);
+      color: #FFC107;
+    }
+
+    .status-approved {
+      background: rgba(40, 167, 69, 0.2);
+      color: #28A745;
+    }
+
+    .status-rejected {
+      background: rgba(220, 53, 69, 0.2);
+      color: #DC3545;
+    }
+
+    /* Notifications */
+    .notification {
+      background: #fff9c4;
+      border-left: 3px solid #FFC107;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .notification-icon {
+      margin-right: 12px;
+      color: #FFC107;
+      font-size: 1rem;
+    }
+
+    .notification-content {
+      flex: 1;
+    }
+
+    .notification-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    .notification-message {
+      color: #555;
+      font-size: 0.85rem;
+    }
+
+    .notification-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .notification-btn {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      border: none;
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #eee;
+      color: #333;
+    }
+
+    /* Late Staff Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 16px;
+      background: linear-gradient(135deg, #dc3545, #c82333);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    .close-modal {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.3s;
+    }
+    .close-modal:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .modal-body {
+      padding: 16px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .staff-list-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .staff-list-item:last-child {
+      border-bottom: none;
+    }
+    .late-count {
+      background: rgba(220, 53, 69, 0.15);
+      color: #dc3545;
+      padding: 3px 8px;
+      border-radius: 16px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    /* Loading Overlay */
+    #loadingOverlay {
+      position: fixed;
+      top: 0; 
+      left: 0;
+      width: 100%; 
+      height: 100%;
+      background: rgba(102, 126, 234, 0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
+      color: #fff;
+      font-size: 16px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid #fff;
+      border-radius: 50%;
+      width: 40px; 
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Mobile Responsive Behavior */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 60px;
+      }
+
+      .sidebar.expanded {
+        width: 220px;
+      }
+
+      .sidebar:not(.expanded) .logo-text,
+      .sidebar:not(.expanded) .user-details,
+      .sidebar:not(.expanded) .nav-item span {
+        display: none;
+      }
+
+      .sidebar:not(.expanded) .nav-item {
+        justify-content: center;
+        padding: 12px;
+        gap: 0;
+      }
+
+      .main-content {
+        margin-left: 60px;
+        padding: 12px;
+      }
+
+      .sidebar.expanded ~ .main-content {
+        margin-left: 220px;
+      }
+
+      .container {
+        padding: 16px;
+      }
+
+      .stats-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading admin dashboard...</p>
+  </div>
+
+  <!-- Sidebar Navigation -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon">
+          <i class="fas fa-user-clock"></i>
+        </div>
+        <div class="logo-text">Attendance</div>
+      </div>
+      <button class="toggle-btn" id="toggleSidebar">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+    </div>
+    
+    <div class="nav-links" id="navLinks">
+      <!-- Navigation will be populated by JavaScript -->
+    </div>
+    
+    <div class="user-info" id="userInfo">
+      <div class="avatar" id="sidebarAvatar">A</div>
+      <div class="user-details">
+        <div class="user-name" id="sidebarUserName">Loading...</div>
+        <div class="user-email" id="sidebarUserEmail">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+      <div class="welcome-header">
+        <h1 id="welcomeText">Welcome, Admin!</h1>
+        <p>Manage attendance, leaves, and staff performance</p>
+      </div>
+      
+      <!-- Notifications -->
+      <div id="notificationsContainer"></div>
+      
+      <!-- Stats Cards -->
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-icon new-leave-icon">
+            <i class="fas fa-bell"></i>
+          </div>
+          <div class="stat-info">
+            <h3>New Leave Requests</h3>
+            <p id="newLeaveRequests">0</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon leave-icon">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <div class="stat-info">
+            <h3>Pending Requests</h3>
+            <p id="pendingRequests">0</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon attendance-icon">
+            <i class="fas fa-user-check"></i>
+          </div>
+          <div class="stat-info">
+            <h3>Staff on Leave Today</h3>
+            <p id="staffOnLeave">0</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon late-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-info">
+            <h3>Late Arrivals (>5)</h3>
+            <p id="lateStaffCount">0</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Today's Absent Staff Only -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3 class="section-title">Staff Absent Today</h3>
+        </div>
+        <div class="staff-list" id="absentStaffList">
+          <p style="text-align:center; color:#666; padding:15px;">Loading absent staff data...</p>
+        </div>
+      </div>
+      
+      <!-- Staff on Leave Today -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3 class="section-title">Staff on Leave Today</h3>
+        </div>
+        <div class="staff-list" id="staffOnLeaveList">
+          <p style="text-align:center; color:#666; padding:15px;">Loading leave data...</p>
+        </div>
+      </div>
+      
+      <!-- New Leave Requests -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3 class="section-title">New Leave Requests</h3>
+        </div>
+        <div class="leave-list" id="newLeaveList">
+          <p style="text-align:center; color:#666; padding:15px;">Loading leave requests...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Late Staff Modal -->
+  <div class="modal" id="lateStaffModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Staff with Excessive Late Arrivals</h3>
+        <button class="close-modal" id="closeLateStaffModal">&times;</button>
+      </div>
+      <div class="modal-body" id="lateStaffModalBody">
+        <p>Loading...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      query, 
+      where, 
+      onSnapshot, 
+      doc, 
+      getDoc,
+      orderBy,
+      writeBatch
+    } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3nU-WVQ-7zm9RijUhj420QPET9GYQpj8",
+      authDomain: "login-form-84016.firebaseapp.com",
+      projectId: "login-form-84016",
+      storageBucket: "login-form-84016.firebasestorage.app",
+      messagingSenderId: "568483509830",
+      appId: "1:568483509830:web:0d6de2a1537154bd67fc47",
+      measurementId: "G-KCGTMGB6HB"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+
+    let currentUid = null;
+    let currentUserData = null;
+    let staffUsers = [];
+    let allAttendanceData = [];
+
+    const absentStaffList = document.getElementById('absentStaffList');
+    const staffOnLeaveList = document.getElementById('staffOnLeaveList');
+    const newLeaveList = document.getElementById('newLeaveList');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const sidebarAvatar = document.getElementById("sidebarAvatar");
+    const sidebarUserName = document.getElementById("sidebarUserName");
+    const sidebarUserEmail = document.getElementById("sidebarUserEmail");
+    const welcomeText = document.getElementById("welcomeText");
+    const newLeaveRequests = document.getElementById("newLeaveRequests");
+    const pendingRequests = document.getElementById("pendingRequests");
+    const staffOnLeave = document.getElementById("staffOnLeave");
+    const lateStaffCount = document.getElementById("lateStaffCount");
+    const navLinks = document.getElementById("navLinks");
+    const notificationsContainer = document.getElementById("notificationsContainer");
+    const sidebar = document.getElementById("sidebar");
+    const toggleSidebarBtn = document.getElementById("toggleSidebar");
+
+    const lateStaffModal = document.getElementById("lateStaffModal");
+    const lateStaffModalBody = document.getElementById("lateStaffModalBody");
+    const closeLateStaffModal = document.getElementById("closeLateStaffModal");
+
+    function addNavLink(text, icon, link, isActive = false) {
+      const li = document.createElement("a");
+      li.className = `nav-item ${isActive ? 'active' : ''}`;
+      li.href = link;
+      li.innerHTML = `<i class="fas ${icon}"></i><span>${text}</span>`;
+      navLinks.appendChild(li);
+    }
+
+    function addLogout() {
+      const logoutDiv = document.createElement("div");
+      logoutDiv.style.marginTop = "auto";
+      logoutDiv.style.paddingTop = "0px";
+     
+
+      const li = document.createElement("a");
+      li.className = "nav-item";
+      li.href = "/";
+      li.id = "logoutLink";
+      li.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>Logout</span>';
+      li.addEventListener("click", (e) => {
+        e.preventDefault();
+        signOut(auth).then(() => {
+          window.location.href = "/";
+        }).catch((error) => {
+          console.error("Logout error:", error);
+        });
+      });
+      logoutDiv.appendChild(li);
+      navLinks.appendChild(logoutDiv);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      toggleSidebarBtn.addEventListener("click", () => {
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+          sidebar.classList.toggle("expanded");
+          const icon = toggleSidebarBtn.querySelector("i");
+          if (sidebar.classList.contains("expanded")) {
+            icon.className = "fas fa-chevron-left";
+          } else {
+            icon.className = "fas fa-chevron-right";
+          }
+        } else {
+          sidebar.classList.toggle("expanded");
+          const icon = toggleSidebarBtn.querySelector("i");
+          if (sidebar.classList.contains("expanded")) {
+            icon.className = "fas fa-chevron-left";
+          } else {
+            icon.className = "fas fa-chevron-right";
+          }
+        }
+      });
+
+      closeLateStaffModal.addEventListener("click", () => {
+        lateStaffModal.style.display = "none";
+      });
+      window.addEventListener("click", (e) => {
+        if (e.target === lateStaffModal) {
+          lateStaffModal.style.display = "none";
+        }
+      });
+
+      showLoading();
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUid = user.uid;
+        try {
+          const userDoc = await getDoc(doc(db, "users", currentUid));
+          if (userDoc.exists()) {
+            currentUserData = userDoc.data();
+            if (currentUserData.role !== "admin") {
+              window.location.href = "/dashboard";
+              return;
+            }
+            updateSidebarUI(currentUserData);
+            buildNavigation(currentUserData.role || "admin");
+          }
+        } catch (err) {
+          console.error("Error fetching user data:", err);
+          hideLoading();
+        }
+        setupLeaveListeners();
+        setupAttendanceListener();
+        hideLoading();
+      } else {
+        hideLoading();
+        window.location.href = "/";
+      }
+    });
+
+    function updateSidebarUI(userData) {
+      const firstName = userData.firstName || "";
+      const lastName = userData.lastName || "";
+      const email = userData.email || "";
+      const fullName = [firstName, lastName].filter(Boolean).join(" ") || "User";
+      const initial1 = firstName.charAt(0).toUpperCase() || "";
+      const initial2 = lastName.charAt(0).toUpperCase() || "";
+      const initials = (initial1 + initial2) || "A";
+      sidebarUserName.textContent = firstName;
+      sidebarUserEmail.textContent = email || "No email";
+      sidebarAvatar.textContent = initials;
+      welcomeText.textContent = `Welcome, ${firstName}!`;
+    }
+
+    function buildNavigation(role) {
+      navLinks.innerHTML = "";
+      if (role === "admin") {
+        addNavLink("Dashboard", "fa-home", "/admin-dashboard", true);
+        addNavLink("Staff Management", "fa-users", "/manage-staff");
+        addNavLink("Staff Attendance Log", "fa-list", "/admin-attendancelog");
+        addNavLink("Staff Leave Requests", "fa-calendar-alt", "/admin-leavecalendar");
+        addNavLink("Staff Live Location", "fa-location-dot", "/admin-liveloc");
+        addNavLink("Admin Profile", "fa-user", "/profile");
+      }
+      addLogout();
+    }
+
+    function setupLeaveListeners() {
+      const leaveQuery = query(collection(db, "leaveRequests"), orderBy("createdAt", "desc"));
+      onSnapshot(leaveQuery, (snapshot) => {
+        const leaveRequests = [];
+        snapshot.forEach(doc => {
+          leaveRequests.push({ id: doc.id, ...doc.data() });
+        });
+        
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const newRequests = leaveRequests.filter(req => 
+          req.status === "pending" && 
+          (req.createdAt?.seconds ? new Date(req.createdAt.seconds * 1000) : new Date()) >= todayStart
+        );
+        const pendingCount = leaveRequests.filter(req => req.status === "pending").length;
+        const staffOnLeaveToday = leaveRequests.filter(req => 
+          req.status === "approved" && 
+          new Date(req.startDate) <= new Date() && 
+          new Date(req.endDate) >= new Date()
+        );
+        
+        renderNewLeaveRequests(newRequests);
+        renderStaffOnLeave(staffOnLeaveToday);
+        newLeaveRequests.textContent = newRequests.length;
+        pendingRequests.textContent = pendingCount;
+        staffOnLeave.textContent = staffOnLeaveToday.length;
+        checkNotifications();
+      }, (error) => {
+        console.error("Error listening to leave requests:", error);
+        hideLoading();
+      });
+    }
+
+    function setupAttendanceListener() {
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      const staffUsersQuery = query(collection(db, "users"), where("role", "==", "staff"));
+      const allAttendanceQuery = query(collection(db, "attendance_test"));
+
+      onSnapshot(staffUsersQuery, (usersSnapshot) => {
+        staffUsers = [];
+        usersSnapshot.forEach(doc => {
+          staffUsers.push({ id: doc.id, ...doc.data() });
+        });
+        if (allAttendanceData) {
+          processAttendanceData(allAttendanceData, staffUsers, todayStr);
+        }
+      }, (error) => {
+        console.error("Error listening to staff users:", error);
+        hideLoading();
+      });
+
+      onSnapshot(allAttendanceQuery, (snapshot) => {
+        allAttendanceData = [];
+        snapshot.forEach(doc => {
+          allAttendanceData.push({ id: doc.id, ...doc.data() });
+        });
+        if (staffUsers) {
+          processAttendanceData(allAttendanceData, staffUsers, todayStr);
+        }
+      }, (error) => {
+        console.error("Error listening to attendance_test:", error);
+        hideLoading();
+      });
+    }
+
+    function processAttendanceData(allAttendance, staffUsers, todayStr) {
+      const todayAttendance = allAttendance.filter(record => 
+        record.timestamp && typeof record.timestamp === 'string' && record.timestamp.startsWith(todayStr)
+      );
+
+      const todayAttendanceMap = {};
+      todayAttendance.forEach(record => {
+        if (record.userId) {
+          todayAttendanceMap[record.userId] = record;
+        }
+      });
+
+      const lateCounts = {};
+      allAttendance.forEach(record => {
+        if (record.status === "Late" && record.userId) {
+          lateCounts[record.userId] = (lateCounts[record.userId] || 0) + 1;
+        }
+      });
+
+      const lateStaff = Object.keys(lateCounts).filter(userId => lateCounts[userId] > 5);
+      lateStaffCount.textContent = lateStaff.length;
+
+      renderAbsentStaff(todayAttendanceMap, lateCounts, staffUsers);
+      window.lateCounts = lateCounts;
+      checkNotifications();
+    }
+
+    function renderAbsentStaff(todayAttendanceMap, lateCounts, staffUsers) {
+      absentStaffList.innerHTML = '';
+      if (!staffUsers || staffUsers.length === 0) {
+        absentStaffList.innerHTML = '<p style="text-align:center; color:#666; padding:15px;">No staff users found</p>';
+        return;
+      }
+
+      const absentStaff = staffUsers.filter(user => !todayAttendanceMap[user.id]);
+      
+      if (absentStaff.length === 0) {
+        absentStaffList.innerHTML = '<p style="text-align:center; color:#666; padding:15px;">All staff are present today</p>';
+        return;
+      }
+
+      absentStaff.forEach(user => {
+        const staffItem = document.createElement('div');
+        staffItem.className = 'staff-item';
+        const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Unknown User";
+        staffItem.innerHTML = `
+          <div class="staff-info">
+            <div class="staff-name">${fullName}</div>
+            <div class="staff-details">Status: Absent</div>
+          </div>
+          <div class="staff-status status-absent">Absent</div>
+        `;
+        absentStaffList.appendChild(staffItem);
+      });
+    }
+
+    function renderStaffOnLeave(staffOnLeave) {
+      staffOnLeaveList.innerHTML = '';
+      if (staffOnLeave.length === 0) {
+        staffOnLeaveList.innerHTML = '<p style="text-align:center; color:#666; padding:15px;">No staff on leave today</p>';
+        return;
+      }
+      staffOnLeave.forEach(leave => {
+        const staffItem = document.createElement('div');
+        staffItem.className = 'staff-item';
+        const startDate = formatDate(leave.startDate);
+        const endDate = formatDate(leave.endDate);
+        staffItem.innerHTML = `
+          <div class="staff-info">
+            <div class="staff-name">${leave.userName || 'Unknown User'}</div>
+            <div class="staff-details">${leave.leaveType}</div>
+          </div>
+          <div class="staff-status status-on-leave">On Leave</div>
+        `;
+        staffOnLeaveList.appendChild(staffItem);
+      });
+    }
+
+    function renderNewLeaveRequests(requests) {
+      newLeaveList.innerHTML = '';
+      if (requests.length === 0) {
+        newLeaveList.innerHTML = '<p style="text-align:center; color:#666; padding:15px;">No new leave requests</p>';
+        return;
+      }
+      requests.forEach(req => {
+        const leaveItem = document.createElement('div');
+        leaveItem.className = 'leave-item';
+        const startDate = formatDate(req.startDate);
+        const endDate = formatDate(req.endDate);
+        leaveItem.innerHTML = `
+          <div class="leave-info">
+            <div class="leave-type">${req.userName || 'Unknown User'} - ${req.leaveType}</div>
+            <div class="leave-dates">${startDate} - ${endDate}</div>
+          </div>
+          <div class="leave-status status-${req.status}">${req.status.charAt(0).toUpperCase() + req.status.slice(1)}</div>
+        `;
+        newLeaveList.appendChild(leaveItem);
+      });
+    }
+
+    function checkNotifications() {
+      notificationsContainer.innerHTML = '';
+      
+      const lateStaffCountValue = parseInt(lateStaffCount.textContent);
+      if (lateStaffCountValue > 0) {
+        const notification = document.createElement("div");
+        notification.className = "notification";
+        notification.innerHTML = `
+          <div class="notification-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="notification-content">
+            <div class="notification-title">Warning: Staff with Excessive Late Arrivals</div>
+            <div class="notification-message">${lateStaffCountValue} staff member(s) have more than 5 late arrivals. Consider sending a warning letter.</div>
+            <div class="notification-actions">
+              <button class="notification-btn btn-primary" onclick="sendWarningLetter()">Send Warning</button>
+              <button class="notification-btn btn-secondary" onclick="viewLateStaff()">View Details</button>
+            </div>
+          </div>
+        `;
+        notificationsContainer.appendChild(notification);
+      }
+      
+      const absentStaffSection = document.getElementById('absentStaffList');
+      const absentMessage = absentStaffSection.querySelector('p');
+      let absentStaffCount = 0;
+      if (!absentMessage || absentMessage.textContent !== 'All staff are present today') {
+        absentStaffCount = absentStaffSection.querySelectorAll('.staff-item').length;
+      }
+      
+      if (absentStaffCount > 0) {
+        const notification = document.createElement("div");
+        notification.className = "notification";
+        notification.innerHTML = `
+          <div class="notification-icon">
+            <i class="fas fa-user-times"></i>
+          </div>
+          <div class="notification-content">
+            <div class="notification-title">Staff Absent Today</div>
+            <div class="notification-message">${absentStaffCount} staff member(s) are absent today without prior notice.</div>
+            <div class="notification-actions">
+              <button class="notification-btn btn-secondary" onclick="viewAttendanceLog()">View Attendance</button>
+            </div>
+          </div>
+        `;
+        notificationsContainer.appendChild(notification);
+      }
+      
+      const newRequests = parseInt(newLeaveRequests.textContent);
+      if (newRequests > 0) {
+        const notification = document.createElement("div");
+        notification.className = "notification";
+        notification.innerHTML = `
+          <div class="notification-icon">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <div class="notification-content">
+            <div class="notification-title">New Leave Requests</div>
+            <div class="notification-message">You have ${newRequests} new leave request(s) pending approval.</div>
+            <div class="notification-actions">
+              <button class="notification-btn btn-primary" onclick="reviewLeaveRequests()">Review Requests</button>
+            </div>
+          </div>
+        `;
+        notificationsContainer.appendChild(notification);
+      }
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return "N/A";
+      const options = { year: 'numeric', month: 'short', day: 'numeric' };
+      return new Date(dateStr).toLocaleDateString('en-US', options);
+    }
+
+    function showLoading(msg = "Loading admin dashboard...") {
+      document.querySelector("#loadingOverlay p").textContent = msg;
+      loadingOverlay.style.display = 'flex';
+    }
+    
+    function hideLoading() {
+      loadingOverlay.style.display = 'none';
+    }
+
+    window.sendWarningLetter = async function() {
+      if (!staffUsers || !window.lateCounts) {
+        alert("Data not ready.");
+        return;
+      }
+
+      const lateStaffIds = Object.keys(window.lateCounts).filter(uid => window.lateCounts[uid] > 5);
+      if (lateStaffIds.length === 0) {
+        alert("No staff with excessive late arrivals.");
+        return;
+      }
+
+      showLoading("Sending warning letters...");
+      try {
+        const batch = writeBatch(db);
+        const now = new Date();
+
+        lateStaffIds.forEach(staffId => {
+          const letterRef = doc(collection(db, "warningLetters"));
+          batch.set(letterRef, {
+            staffId: staffId,
+            adminId: currentUid,
+            sentAt: now.toISOString(),
+            reason: "Excessive late arrivals (>5 times)",
+            status: "unread",
+            type: "attendance_warning"
+          });
+        });
+
+        await batch.commit();
+        alert(`✅ Warning letters sent to ${lateStaffIds.length} staff member(s).`);
+      } catch (err) {
+        console.error("Failed to send warnings:", err);
+        alert("❌ Failed to send warning letters.");
+      } finally {
+        hideLoading();
+      }
+    };
+
+    window.viewLateStaff = function() {
+      if (!staffUsers || !window.lateCounts) {
+        lateStaffModalBody.innerHTML = "<p>Data not loaded yet.</p>";
+        lateStaffModal.style.display = "block";
+        return;
+      }
+
+      const lateStaffIds = Object.keys(window.lateCounts).filter(uid => window.lateCounts[uid] > 5);
+      if (lateStaffIds.length === 0) {
+        lateStaffModalBody.innerHTML = "<p>No staff with excessive late arrivals.</p>";
+        lateStaffModal.style.display = "block";
+        return;
+      }
+
+      const lateStaffList = staffUsers.filter(user => lateStaffIds.includes(user.id));
+      lateStaffModalBody.innerHTML = "";
+
+      lateStaffList.forEach(user => {
+        const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Unknown";
+        const count = window.lateCounts[user.id] || 0;
+        const div = document.createElement("div");
+        div.className = "staff-list-item";
+        div.innerHTML = `
+          <div class="staff-name">${fullName}</div>
+          <div class="late-count">${count} times</div>
+        `;
+        lateStaffModalBody.appendChild(div);
+      });
+
+      lateStaffModal.style.display = "block";
+    };
+
+    window.viewAttendanceLog = function() {
+      window.location.href = "/admin-attendancelog";
+    };
+    
+    window.reviewLeaveRequests = function() {
+      window.location.href = "/admin-leavecalendar";
+    };
+  </script>
+</body>
+</html>

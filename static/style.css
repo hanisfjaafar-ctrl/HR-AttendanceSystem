@@ -1,0 +1,318 @@
+/* ===== BASE STYLES ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  overflow: auto;
+  color: #333;
+  position: relative;
+}
+
+/* Background */
+.particles,
+.bg-shapes {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ===== MAIN CONTAINER — COMPACT & FIXED WIDTH ===== */
+.container {
+  width: 100%;
+  max-width: 580px; /* Slightly narrower */
+  background: rgba(255, 255, 255, 0.96);
+  padding: 22px; /* Reduced */
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(10px);
+  z-index: 2;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.form-title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2c3e50;
+  font-size: 1.6rem; /* Smaller */
+  font-weight: 700;
+}
+
+/* ===== NAME ROW ===== */
+.name-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.input-group.half {
+  flex: 1;
+  position: relative;
+}
+
+@media (max-width: 600px) {
+  .name-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* ===== INPUTS — COMPACT ===== */
+.input-group {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.input-group i {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #7f8c8d;
+  font-size: 1rem;
+}
+
+.input-group input,
+.input-group select {
+  width: 100%;
+  padding: 11px 14px 11px 44px;
+  border: 2px solid #e1e5eb;
+  border-radius: 10px;
+  font-size: 0.94rem;
+  background: #fafbff;
+  transition: all 0.3s;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  background: white;
+}
+
+/* ===== PROGRESS STEPS — SMALLER ===== */
+.progress-container {
+  margin-bottom: 22px;
+}
+
+.progress-bar {
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #667eea, #764ba2);
+  width: 0%;
+  transition: width 0.4s;
+}
+
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1;
+}
+
+.step-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #757575;
+  font-size: 0.78rem;
+}
+
+.step-circle.active {
+  background: linear-gradient(to right, #667eea, #764ba2);
+  color: white;
+  transform: scale(1.05);
+}
+
+.step-label {
+  font-size: 0.68rem;
+  color: #9e9e9e;
+  text-align: center;
+  max-width: 65px;
+}
+
+.step-label.active {
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* ===== FORM CONTENT ===== */
+.form-step {
+  display: none;
+}
+
+.form-step.active {
+  display: block;
+}
+
+.section-title {
+  margin-bottom: 16px;
+  color: #2c3e50;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ===== BUTTONS — COMPACT ===== */
+.form-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  gap: 8px;
+}
+
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  color: white;
+  flex: 1;
+  text-align: center;
+}
+
+.btn-primary {
+  background: linear-gradient(to right, #667eea, #764ba2);
+}
+
+.btn-secondary {
+  background: linear-gradient(to right, #95a5a6, #7f8c8d);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 7px rgba(0,0,0,0.14);
+}
+
+/* ===== LINKS & MESSAGES ===== */
+.links {
+  text-align: center;
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid #eee;
+}
+
+.links a {
+  color: #667eea;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.96rem;
+}
+
+.messageDiv {
+  padding: 10px;
+  margin-bottom: 18px;
+  border-radius: 9px;
+  text-align: center;
+  font-weight: 600;
+  display: none;
+}
+
+/* ===== LOADING OVERLAY ===== */
+#loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(102, 126, 234, 0.95);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  flex-direction: column;
+  color: #fff;
+  font-size: 17px;
+  backdrop-filter: blur(5px);
+}
+
+.spinner {
+  width: 46px;
+  height: 46px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 18px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== ANIMATIONS FOR BACKGROUND (unchanged) ===== */
+.particles span {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  animation: float 15s infinite ease-in-out;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100vh) translateX(100px); opacity: 0; }
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  animation: rotate 25s infinite linear;
+}
+
+.shape:nth-child(1) { width: 300px; height: 300px; top: -150px; left: -150px; }
+.shape:nth-child(2) { width: 200px; height: 200px; bottom: -100px; right: -100px; animation-direction: reverse; animation-duration: 20s; }
+.shape:nth-child(3) { width: 150px; height: 150px; top: 40%; right: 10%; animation-duration: 30s; }
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

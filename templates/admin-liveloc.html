@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staff Live Location</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: rgba(255, 255, 255, 0.95);
+      height: 100vh;
+      position: fixed;
+      top: 0; left: 0;
+      box-shadow: 3px 0 15px rgba(0,0,0,0.15);
+      transition: all 0.3s ease;
+      display: flex; flex-direction: column;
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+    }
+    .sidebar.collapsed { width: 70px; }
+    .sidebar-header {
+      padding: 25px 20px; display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #eee;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg,#667eea,#764ba2);
+      display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px;
+    }
+    .logo-text { font-weight: 700; font-size: 1.4rem; color: #333; }
+    .sidebar.collapsed .logo-text { display: none; }
+    .toggle-btn { background:none;border:none;font-size:1.1rem;cursor:pointer;color:#667eea; }
+    .nav-links { flex:1;padding:20px 0;display:flex;flex-direction:column; }
+    .nav-item {
+      display:flex;align-items:center;gap:12px;
+      padding:12px 25px;color:#555;text-decoration:none;
+      border-left:4px solid transparent;font-weight:500;
+      transition:0.2s;
+    }
+    .nav-item:hover,.nav-item.active { background:rgba(102,126,234,0.1);color:#667eea;border-left:4px solid #667eea; }
+    .sidebar.collapsed .nav-item span { display:none; }
+    .sidebar.collapsed .nav-item { justify-content:center;padding:15px; }
+    .user-info { padding:20px;border-top:1px solid #eee;display:flex;align-items:center;gap:10px; }
+    .avatar {
+      width:45px;height:45px;border-radius:50%;
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;
+    }
+    .user-details { flex:1; }
+    .user-name { font-weight:600;color:#333; }
+    .user-email { font-size:0.85rem;color:#777; }
+
+    /* Main */
+    .main-content { flex:1;margin-left:280px;padding:30px;transition:margin-left .3s; }
+    .sidebar.collapsed ~ .main-content { margin-left:70px; }
+    .container {
+      background:#fff;border-radius:20px;box-shadow:0 20px 40px rgba(0,0,0,0.1);
+      height:90vh;padding:25px;display:flex;flex-direction:column;
+    }
+    h2 { text-align:center;margin-bottom:20px;color:#333;font-weight:700; }
+    .content-layout { display:flex;gap:20px;flex:1; }
+    .staff-list {
+      width:300px;background:#f9f9f9;border-radius:12px;padding:15px;overflow-y:auto;
+    }
+    .staff-item {
+      padding:12px;border-bottom:1px solid #eee;cursor:pointer;
+      border-radius:8px;transition:background .2s;
+    }
+    .staff-item:hover { background:#eef4ff; }
+    .staff-name { font-weight:600;color:#333; }
+    .staff-status { font-size:0.85rem;color:#666; }
+
+    #map { flex:1;border-radius:15px;box-shadow:0 4px 20px rgba(0,0,0,0.1); }
+
+    #loadingOverlay {
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      background:rgba(102,126,234,0.9);display:none;justify-content:center;align-items:center;
+      flex-direction:column;color:white;font-size:18px;z-index:9999;
+    }
+    .spinner {
+      border:4px solid rgba(255,255,255,0.3);border-top:4px solid #fff;
+      border-radius:50%;width:60px;height:60px;margin-bottom:15px;
+      animation:spin 1s linear infinite;
+    }
+    @keyframes spin { 0%{transform:rotate(0);}100%{transform:rotate(360deg);} }
+
+    @media(max-width:768px){
+      .sidebar{width:70px;}
+      .sidebar .logo-text,.sidebar .user-details,.sidebar .nav-item span{display:none;}
+      .main-content{margin-left:70px;padding:20px;}
+      .content-layout{flex-direction:column;}
+      .staff-list{width:100%;max-height:250px;}
+    }
+
+    .status-green { color: #28a745; font-weight: 600; }
+    .status-orange { color: #ff9800; font-weight: 600; }
+    .status-red { color: #dc3545; font-weight: 600; }
+  </style>
+</head>
+
+<body>
+  <div id="loadingOverlay"><div class="spinner"></div><p>Loading staff live locations...</p></div>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo"><div class="logo-icon"><i class="fas fa-user-clock"></i></div><div class="logo-text">Attendance</div></div>
+      <button class="toggle-btn" id="toggleSidebar"><i class="fas fa-chevron-left"></i></button>
+    </div>
+    <div class="nav-links" id="navLinks"></div>
+    <div class="user-info">
+      <div class="avatar" id="sidebarAvatar">U</div>
+      <div class="user-details">
+        <div class="user-name" id="sidebarUserName">User</div>
+        <div class="user-email" id="sidebarUserEmail">user@example.com</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+      <h2>Staff Live Location</h2>
+      <div class="content-layout">
+        <div class="staff-list">
+          <h3>Staff Present Today</h3>
+          <div id="staffListContainer"></div>
+          <hr style="margin:15px 0;">
+          <h3>Staff Checked Out</h3>
+          <div id="checkedOutContainer"></div>
+        </div>
+        <div id="map"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3nU-WVQ-7zm9RijUhj420QPET9GYQpj8",
+      authDomain: "login-form-84016.firebaseapp.com",
+      projectId: "login-form-84016",
+      storageBucket: "login-form-84016.firebasestorage.app",
+      messagingSenderId: "568483509830",
+      appId: "1:568483509830:web:0d6de2a1537154bd67fc47"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const map = L.map('map').setView([3.139, 101.6869], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+
+    const checkInIcon = L.icon({ iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png', shadowUrl:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png', iconSize:[25,41], iconAnchor:[12,41] });
+    const checkedOutIcon = L.icon({ iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png', shadowUrl:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png', iconSize:[25,41], iconAnchor:[12,41] });
+    const liveLocationIcon = L.icon({ iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', shadowUrl:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png', iconSize:[25,41], iconAnchor:[12,41] });
+
+    let markers = [];
+    let adminCoords = null;
+
+    function clearMarkers(){ markers.forEach(m=>map.removeLayer(m)); markers=[]; }
+
+    function calculateDistance(lat1, lon1, lat2, lon2){
+      const R=6371e3; // meters
+      const φ1=lat1*Math.PI/180, φ2=lat2*Math.PI/180;
+      const Δφ=(lat2-lat1)*Math.PI/180, Δλ=(lon2-lon1)*Math.PI/180;
+      const a=Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+      const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+      return R*c; // meters
+    }
+
+    function getLocationStatusColor(distance, workMode){
+      if(distance < 50) return {text: workMode==='wfo'?'At Office':'At Home', color:'status-green'};
+      else if(distance < 500) return {text: workMode==='wfo'?'At Office':'At Home', color:'status-orange'};
+      else return {text: workMode==='wfo'?'Far from Office':'Far from Home', color:'status-red'};
+    }
+
+    async function loadStaffToday(){
+      document.getElementById("loadingOverlay").style.display="flex";
+      const staffList=document.getElementById("staffListContainer");
+      const checkedList=document.getElementById("checkedOutContainer");
+      staffList.innerHTML=""; checkedList.innerHTML="";
+      clearMarkers();
+
+      const today=new Date().toISOString().split('T')[0];
+      const q=query(collection(db,"attendance_test"), where("timestamp",">=",`${today} 00:00:00`), orderBy("timestamp","desc"));
+      const snap=await getDocs(q);
+
+      if(snap.empty){
+        staffList.innerHTML="<p>No attendance records today.</p>";
+        document.getElementById("loadingOverlay").style.display="none";
+        return;
+      }
+
+      snap.forEach(doc=>{
+        const d=doc.data();
+        const hasCheckout = d.checkout;
+        const div=document.createElement("div");
+        div.className="staff-item";
+        let distanceText = "";
+
+        if(!hasCheckout && adminCoords && d.latitude && d.longitude){
+          const distance = calculateDistance(adminCoords.lat, adminCoords.lng, d.latitude, d.longitude);
+          const locStatus = getLocationStatusColor(distance, d.workMode || 'wfo');
+          distanceText = `<br><small class="${locStatus.color}">${locStatus.text} (${distance.toFixed(1)} m)</small>`;
+        }
+
+        div.innerHTML=`
+          <div class="staff-name">${d.name||"Unknown"}</div>
+          <div class="staff-status">
+            ${hasCheckout 
+              ? `Checked Out @ ${d.checkout}` 
+              : `Checked In @ ${d.checkin || "-"} ${distanceText}`
+            }
+          </div>`;
+        div.onclick=()=>showStaffLocation(d, hasCheckout);
+
+        if(hasCheckout){checkedList.appendChild(div);} else {staffList.appendChild(div);}
+      });
+
+      document.getElementById("loadingOverlay").style.display="none";
+    }
+
+    function showStaffLocation(d,isCheckedOut){
+      clearMarkers();
+      if(d.latitude&&d.longitude){
+        const marker=L.marker([d.latitude,d.longitude],{icon:isCheckedOut?checkedOutIcon:checkInIcon})
+          .addTo(map)
+          .bindPopup(`<b>${d.name}</b><br>${isCheckedOut?"Checked Out":"Checked In"} @ ${d.address||"Unknown"}`);
+        markers.push(marker);
+        map.setView([d.latitude,d.longitude],15);
+      }
+
+      if(!isCheckedOut){
+        navigator.geolocation.watchPosition(pos=>{
+          adminCoords={lat:pos.coords.latitude,lng:pos.coords.longitude};
+          const distance=calculateDistance(adminCoords.lat,adminCoords.lng,d.latitude,d.longitude);
+          const status=getLocationStatusColor(distance,d.workMode);
+          clearMarkers();
+
+          L.marker([adminCoords.lat,adminCoords.lng],{icon:liveLocationIcon})
+            .addTo(map)
+            .bindPopup(`<b>Admin Live Position</b>`);
+          const staffMarker=L.marker([d.latitude,d.longitude],{icon:checkInIcon})
+            .addTo(map)
+            .bindPopup(`<b>${d.name}</b><br>${status.text} (${distance.toFixed(1)} m)`);
+          markers.push(staffMarker);
+        });
+      }
+    }
+
+    onAuthStateChanged(auth, async (user)=>{
+      if(!user){window.location.href="index.html";return;}
+      const userDoc=await getDoc(doc(db,"users",user.uid));
+      const u=userDoc.data()||{};
+      document.getElementById("sidebarUserName").textContent=u.firstName||"User";
+      document.getElementById("sidebarUserEmail").textContent=u.email||user.email;
+      document.getElementById("sidebarAvatar").textContent=((u.firstName?.[0]||"U")+(u.lastName?.[0]||"")).toUpperCase();
+
+      const nav=document.getElementById("navLinks");
+      nav.innerHTML=`
+        <a class="nav-item" href="admin-dashboard.html"><i class="fas fa-home"></i><span>Dashboard</span></a>
+        <a class="nav-item" href="manage-staff.html"><i class="fas fa-users"></i><span>Staff Management</span></a>
+        <a class="nav-item" href="admin-attendancelog.html"><i class="fas fa-list"></i><span>Staff Attendance Log</span></a>
+        <a class="nav-item" href="admin-leavecalendar.html"><i class="fas fa-calendar-alt"></i><span>Staff Leave Requests</span></a>
+        <a class="nav-item active" href="admin-liveloc.html"><i class="fas fa-location-dot"></i><span>Staff Live Location</span></a>
+        <a class="nav-item" href="profile.html"><i class="fas fa-user"></i><span>Admin Profile</span></a>
+        <a class="nav-item logout-divider" href="index.html" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>`;
+      document.getElementById("logoutBtn").onclick=()=>{signOut(auth);window.location.href="index.html";};
+
+      navigator.geolocation.getCurrentPosition(pos=>{
+        adminCoords={lat:pos.coords.latitude,lng:pos.coords.longitude};
+        loadStaffToday();
+      });
+    });
+
+    document.getElementById("toggleSidebar").onclick=()=>{
+      const sb=document.getElementById("sidebar");
+      sb.classList.toggle("collapsed");
+      document.querySelector("#toggleSidebar i").className=sb.classList.contains("collapsed")?"fas fa-chevron-right":"fas fa-chevron-left";
+    };
+  </script>
+</body>
+</html>

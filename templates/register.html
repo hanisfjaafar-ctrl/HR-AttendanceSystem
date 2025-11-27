@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script type="module" src="/static/firebaseauth.js"></script>
+  <link rel="stylesheet" href="/static/style.css">
+  <title>Register</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="particles" id="particles"></div>
+  <div class="bg-shapes" id="bgShapes"></div>
+
+  <!-- Form Container -->
+  <div class="container">
+    <h1 class="form-title">Create Account</h1>
+    <form id="signUpForm">
+      <div id="signUpMessage" class="messageDiv" style="display:none;"></div>
+
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-steps">
+          <div class="progress-step">
+            <div class="step-circle active" id="step1Circle">1</div>
+            <div class="step-label active" id="step1Label">Personal</div>
+          </div>
+          <div class="progress-step">
+            <div class="step-circle" id="step2Circle">2</div>
+            <div class="step-label" id="step2Label">Account</div>
+          </div>
+          <div class="progress-step">
+            <div class="step-circle" id="step3Circle">3</div>
+            <div class="step-label" id="step3Label">Employment</div>
+          </div>
+          <div class="progress-step">
+            <div class="step-circle" id="step4Circle">4</div>
+            <div class="step-label" id="step4Label">Emergency</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 1: Personal -->
+      <div class="form-step active" id="step1">
+        <div class="form-sections">
+          <h2 class="section-title">Personal Information</h2>
+          <div class="name-row">
+            <div class="input-group half">
+              <i class="fas fa-user"></i>
+              <input type="text" id="fName" placeholder="First Name" required/>
+            </div>
+            <div class="input-group half">
+              <i class="fas fa-user"></i>
+              <input type="text" id="lName" placeholder="Last Name" required/>
+            </div>
+          </div>
+          <div class="input-group">
+            <i class="fas fa-phone"></i>
+            <input type="text" id="phone" placeholder="Phone Number" required/>
+          </div>
+          <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="rEmail" placeholder="Email" required/>
+          </div>
+          <div class="input-group">
+            <i class="fas fa-map-marker-alt"></i>
+            <input type="text" id="address" placeholder="Address" required/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Account -->
+      <div class="form-step" id="step2">
+        <div class="form-sections">
+          <h2 class="section-title">Account Setup</h2>
+          <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="rPassword" placeholder="Password" required/>
+          </div>
+          <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="confirmPassword" placeholder="Confirm Password" required/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Employment -->
+      <div class="form-step" id="step3">
+        <div class="form-sections">
+          <h2 class="section-title">Employment Details</h2>
+          <div class="input-group">
+            <i class="fas fa-briefcase"></i>
+            <input type="text" id="jobPosition" placeholder="Job Position" required/>
+          </div>
+          <div class="input-group">
+            <i class="fas fa-building"></i>
+            <input type="text" id="department" placeholder="Department" required/>
+          </div>
+          <div class="input-group">
+            <i class="fas fa-calendar-alt"></i>
+            <input type="date" id="startDate" required/>
+          </div>
+          <div class="input-group">
+            <i class="fas fa-user-tag"></i>
+            <select id="role" required>
+              <option value="">-- Select Role --</option>
+              <option value="staff">Staff</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="input-group hidden" id="referralGroup">
+            <i class="fas fa-key"></i>
+            <input type="text" id="referralCode" placeholder="Enter Referral Code"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Emergency -->
+      <div class="form-step" id="step4">
+        <div class="form-sections">
+          <h2 class="section-title">Emergency Contact</h2>
+          <div class="input-group">
+            <i class="fas fa-user-shield"></i>
+            <input type="text" id="emergencyName" placeholder="Emergency Contact Name" required/>
+          </div>
+          <div class="input-group">
+            <i class="fas fa-phone-alt"></i>
+            <input type="text" id="emergencyPhone" placeholder="Emergency Contact Phone" required/>
+          </div>
+          <div class="input-group">
+            <i class="fas fa-users"></i>
+            <select id="relation" required>
+              <option value="">-- Select Relationship --</option>
+              <option value="Parent">Parent</option>
+              <option value="Sibling">Sibling</option>
+              <option value="Spouse">Spouse</option>
+              <option value="Relative">Relative</option>
+              <option value="Friend">Friend</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="form-navigation">
+        <button type="button" class="btn btn-secondary" id="prevBtn">Previous</button>
+        <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
+        <button type="button" class="btn" id="signUpBtn" style="display:none; background: linear-gradient(to right, #27ae60, #2ecc71);" onclick="handleSignUp()">Sign Up</button>
+      </div>
+
+      <div class="links">
+        <p>Already have an account?</p>
+        <a href="/">Login Here</a>
+      </div>
+    </form>
+  </div>
+  
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Creating your account...</p>
+  </div>
+
+  <!-- Form Navigation & Validation Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let currentStep = 1;
+      const totalSteps = 4;
+
+      const nextBtn = document.getElementById('nextBtn');
+      const prevBtn = document.getElementById('prevBtn');
+      const signUpBtn = document.getElementById('signUpBtn');
+
+      function updateNavigation() {
+        // Hide all steps
+        document.querySelectorAll('.form-step').forEach(step => step.classList.remove('active'));
+        // Show current step
+        document.getElementById(`step${currentStep}`).classList.add('active');
+
+        // Update progress bar
+        const progressFill = document.getElementById('progressFill');
+        progressFill.style.width = `${((currentStep - 1) / (totalSteps - 1)) * 100}%`;
+
+        // Update step indicators
+        for (let i = 1; i <= totalSteps; i++) {
+          const isActive = i <= currentStep;
+          document.getElementById(`step${i}Circle`).classList.toggle('active', isActive);
+          document.getElementById(`step${i}Label`).classList.toggle('active', isActive);
+        }
+
+        // Toggle buttons
+        prevBtn.style.display = currentStep === 1 ? 'none' : 'block';
+        if (currentStep === totalSteps) {
+          nextBtn.style.display = 'none';
+          signUpBtn.style.display = 'block';
+        } else {
+          nextBtn.style.display = 'block';
+          signUpBtn.style.display = 'none';
+        }
+      }
+
+      function validateStep(stepNumber) {
+        const step = document.getElementById(`step${stepNumber}`);
+        const inputs = step.querySelectorAll('input[required], select[required]');
+        let isValid = true;
+
+        inputs.forEach(input => {
+          if (!input.value.trim()) {
+            isValid = false;
+            input.style.borderColor = '#e74c3c';
+            input.classList.add('error');
+          } else {
+            input.style.borderColor = '#e1e5eb';
+            input.classList.remove('error');
+          }
+        });
+
+        return isValid;
+      }
+
+      // Auto-remove error on input
+      document.querySelectorAll('input, select').forEach(input => {
+        input.addEventListener('input', () => {
+          if (input.classList.contains('error')) {
+            input.classList.remove('error');
+            input.style.borderColor = '#e1e5eb';
+          }
+        });
+      });
+
+      nextBtn.addEventListener('click', () => {
+        if (validateStep(currentStep)) {
+          currentStep++;
+          updateNavigation();
+        } else {
+          showMessage('Please fill in all required fields.', 'error');
+        }
+      });
+
+      prevBtn.addEventListener('click', () => {
+        if (currentStep > 1) {
+          currentStep--;
+          updateNavigation();
+        }
+      });
+
+      window.handleSignUp = function() {
+        if (validateStep(totalSteps)) {
+          // 🔐 Your Firebase sign-up logic goes here
+          // Example:
+          // createUserWithEmailAndPassword(auth, email, password)
+          //   .then(...)
+          showMessage('Account created successfully!', 'success');
+          document.getElementById('loadingOverlay').style.display = 'flex';
+          // Simulate API call
+          setTimeout(() => {
+            document.getElementById('loadingOverlay').style.display = 'none';
+          }, 2000);
+        } else {
+          showMessage('Please fill in all required fields.', 'error');
+        }
+      };
+
+      function showMessage(text, type) {
+        const msgDiv = document.getElementById('signUpMessage');
+        msgDiv.textContent = text;
+        msgDiv.style.display = 'block';
+        msgDiv.style.backgroundColor = type === 'error' ? '#ffebee' : '#e8f5e9';
+        msgDiv.style.color = type === 'error' ? '#c62828' : '#2e7d32';
+        setTimeout(() => {
+          msgDiv.style.display = 'none';
+        }, 5000);
+      }
+
+      // Initialize
+      updateNavigation();
+    });
+  </script>
+</body>
+</html>

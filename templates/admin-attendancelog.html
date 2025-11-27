@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Management</title>
+  <!-- Fixed CDN URLs (no extra spaces) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      min-height: 100vh;
+      padding: 0;
+      overflow-x: hidden;
+      display: flex;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 140px;
+      background: rgba(255, 255, 255, 0.95);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      box-shadow: 3px 0 15px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(10px);
+    }
+
+    .sidebar.expanded {
+      width: 220px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 60px;
+      }
+      .sidebar.expanded {
+        width: 220px;
+      }
+    }
+
+    .sidebar-header {
+      padding: 15px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #eee;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #333;
+      white-space: nowrap;
+    }
+
+    .sidebar:not(.expanded) .logo-text,
+    .sidebar:not(.expanded) .user-details,
+    .sidebar:not(.expanded) .nav-item span {
+      display: none;
+    }
+
+    .toggle-btn {
+      background: none;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #667eea;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .toggle-btn:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .nav-links {
+      padding: 12px 0;
+      flex: 1;
+    }
+
+    .nav-item {
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #555;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      border-left: 3px solid #667eea;
+    }
+
+    .nav-item i {
+      font-size: 1rem;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar:not(.expanded) .nav-item {
+      justify-content: center;
+      padding: 12px;
+      gap: 0;
+    }
+
+    .user-info {
+      padding: 12px;
+      border-top: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9rem;
+    }
+
+    .user-email {
+      font-size: 0.75rem;
+      color: #777;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      padding: 15px;
+      margin-left: 140px;
+      transition: margin-left 0.3s ease;
+    }
+
+    .sidebar.expanded ~ .main-content {
+      margin-left: 220px;
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 60px;
+      }
+      .sidebar.expanded ~ .main-content {
+        margin-left: 220px;
+      }
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 2px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 2px;
+    }
+
+    .attendance-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .search-container,
+    .date-picker-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      max-width: 280px;
+    }
+
+    .search-container label,
+    .date-picker-container label {
+      font-weight: 600;
+      color: #555;
+      font-size: 0.85rem;
+    }
+
+    #staffSearch,
+    #datePicker {
+      padding: 8px 12px;
+      border: 2px solid #e0e6ed;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      width: 100%;
+      transition: border-color 0.3s;
+    }
+
+    #staffSearch:focus,
+    #datePicker:focus {
+      border-color: #667eea;
+      outline: none;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+    }
+
+    .btn-primary { background: #667eea; color: white; }
+    .btn-primary:hover { background: #5a6fd8; transform: translateY(-2px); }
+    .btn-secondary { background: #2ecc71; color: white; }
+    .btn-secondary:hover { background: #27ae60; transform: translateY(-2px); }
+    .btn-outline { background: transparent; border: 2px solid #667eea; color: #667eea; }
+    .btn-outline:hover { background: #667eea; color: white; }
+
+    .attendance-table-container {
+      overflow-x: auto;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+
+    table { width: 100%; border-collapse: collapse; min-width: 500px; }
+    thead { background: linear-gradient(to right, #667eea, #764ba2); color: white; }
+    th { padding: 12px 15px; text-align: left; font-weight: 600; font-size: 0.85rem; }
+    td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background-color: #f8f9fa; }
+    .no-attendance { background-color: #ffebee !important; }
+
+    .status {
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-weight: 600;
+      font-size: 0.75rem;
+      display: inline-block;
+    }
+
+    .status-green { background: #e8f5e9; color: #2e7d32; }
+    .status-red, .status-late { background: #ffebee; color: #c62828; }
+
+    .location {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .location-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 10px;
+    }
+
+    .location-office { background: #e3f2fd; color: #1976d2; }
+    .location-home { background: #f3e5f5; color: #7b1fa2; }
+    .location-nearby { background: #fff8e1; color: #f57f17; }
+
+    .empty-state {
+      text-align: center;
+      padding: 30px 15px;
+      color: #7f8c8d;
+    }
+    .empty-state i { font-size: 2.5rem; margin-bottom: 12px; color: #bdc3c7; }
+    .empty-state h3 { margin-bottom: 8px; color: #2c3e50; font-size: 1.2rem; }
+
+    #absentSection {
+      margin-top: 25px;
+    }
+    #absentSection h3 {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+      color: #333;
+    }
+
+    #loadingOverlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(102, 126, 234, 0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
+      color: #fff;
+      font-size: 16px;
+    }
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top: 3px solid #fff;
+      border-radius: 50%;
+      width: 40px; height: 40px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .modal {
+      position: fixed;
+      z-index: 2000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    .close {
+      position: absolute;
+      right: 12px;
+      top: 8px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #aaa;
+    }
+    .close:hover { color: #333; }
+
+    .clickable-name {
+      color: #667eea;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 0.85rem;
+    }
+    .clickable-name:hover { color: #5a6fd8; }
+
+    @media (max-width: 768px) {
+      .attendance-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .action-buttons {
+        width: 100%;
+        justify-content: center;
+      }
+      .btn {
+        flex: 1;
+        justify-content: center;
+        font-size: 0.8rem;
+      }
+      .container { padding: 16px; }
+      h2 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading attendance data...</p>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon"><i class="fas fa-user-clock"></i></div>
+        <div class="logo-text">Attendance</div>
+      </div>
+      <button class="toggle-btn" id="toggleBtn">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+    </div>
+    <div class="nav-links" id="navLinks"></div>
+    <div class="user-info" id="userInfo">
+      <div class="avatar" id="sidebarAvatar">U</div>
+      <div class="user-details">
+        <div class="user-name" id="sidebarUserName">Loading...</div>
+        <div class="user-email" id="sidebarUserEmail">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+      <h2 id="attendanceTitle">Today's Attendance</h2>
+      
+      <div class="attendance-controls">
+        <div class="search-container">
+          <label for="staffSearch"><i class="fas fa-search"></i> Search:</label>
+          <input type="text" id="staffSearch" placeholder="Staff name...">
+        </div>
+        <div class="date-picker-container">
+          <label for="datePicker"><i class="fas fa-calendar-day"></i> Date:</label>
+          <input type="date" id="datePicker">
+        </div>
+        <div class="action-buttons">
+          <button id="searchBtn" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
+          <button id="downloadBtn" class="btn btn-secondary"><i class="fas fa-download"></i> CSV</button>
+        </div>
+      </div>
+      
+      <div class="attendance-table-container">
+        <table id="attendanceTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>In</th>
+              <th>Status</th>
+              <th>Out</th>
+              <th>Location</th>
+              <th>Mode</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceBody"></tbody>
+        </table>
+        <div id="emptyState" class="empty-state" style="display:none;">
+          <i class="fas fa-clipboard-list"></i>
+          <h3>No Records</h3>
+          <p>No attendance for this date.</p>
+        </div>
+      </div>
+
+      <div id="absentSection">
+        <h3>Absent Staff</h3>
+        <div id="absentList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="detailsModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3 id="modalName">User Details</h3>
+      <p><strong>Check-in:</strong> <span id="modalCheckIn">—</span></p>
+      <p><strong>Status:</strong> <span id="modalCheckInStatus">—</span></p>
+      <p><strong>Check-out:</strong> <span id="modalCheckOutTime">—</span></p>
+      <p><strong>Location:</strong> <span id="modalAddress">Loading...</span></p>
+      <div id="map" style="height:200px; margin-top:12px; border-radius:6px; border:1px solid #ddd;"></div>
+    </div>
+  </div>
+
+  <!-- Fixed CDN URLs (no extra spaces) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+    // Fixed CDN URLs (no extra spaces in imports)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3nU-WVQ-7zm9RijUhj420QPET9GYQpj8",
+      authDomain: "login-form-84016.firebaseapp.com",
+      projectId: "login-form-84016",
+      storageBucket: "login-form-84016.firebasestorage.app",
+      messagingSenderId: "568483509830",
+      appId: "1:568483509830:web:0d6de2a1537154bd67fc47"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+
+    const sidebar = document.getElementById("sidebar");
+    const toggleBtn = document.getElementById("toggleBtn");
+    const navLinks = document.getElementById("navLinks");
+    const attendanceTitle = document.getElementById("attendanceTitle");
+    const attendanceBody = document.getElementById("attendanceBody");
+    const emptyState = document.getElementById("emptyState");
+    const datePicker = document.getElementById("datePicker");
+    const searchBtn = document.getElementById("searchBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    const sidebarAvatar = document.getElementById("sidebarAvatar");
+    const sidebarUserName = document.getElementById("sidebarUserName");
+    const sidebarUserEmail = document.getElementById("sidebarUserEmail");
+    const staffSearch = document.getElementById("staffSearch");
+    const absentListDiv = document.getElementById("absentList");
+    const detailsModal = document.getElementById("detailsModal");
+
+    const today = new Date();
+    datePicker.valueAsDate = today;
+
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("expanded");
+      const icon = toggleBtn.querySelector("i");
+      if (sidebar.classList.contains("expanded")) {
+        icon.className = "fas fa-chevron-left";
+      } else {
+        icon.className = "fas fa-chevron-right";
+      }
+    });
+
+    document.querySelector(".close").addEventListener("click", () => {
+      detailsModal.style.display = "none";
+    });
+    window.addEventListener("click", (e) => {
+      if (e.target === detailsModal) detailsModal.style.display = "none";
+    });
+
+    function formatDateForDisplay(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "short", day: "numeric" });
+    }
+
+    let ALL_STAFF = [];
+    let ALL_ATTENDANCE = [];
+    let STAFF_LOADED = false;
+
+    async function loadAllStaffOnce() {
+      if (STAFF_LOADED) return;
+      const q = query(collection(db, "users"), where("role", "==", "staff"));
+      const snapshot = await getDocs(q);
+      ALL_STAFF = snapshot.docs.map(d => {
+        const x = d.data();
+        return { id: d.id, name: [x.firstName, x.lastName].filter(Boolean).join(" ") || "Unknown" };
+      });
+      STAFF_LOADED = true;
+    }
+
+    async function fetchAttendanceAll() {
+      const q = query(collection(db, "attendance_test"), orderBy("timestamp", "desc"));
+      const snapshot = await getDocs(q);
+      ALL_ATTENDANCE = snapshot.docs.map(d => {
+        const v = d.data();
+        let localDate = "", localTime = "";
+        if (v.timestamp) {
+          const dt = new Date(v.timestamp);
+          localDate = dt.toLocaleDateString("en-CA");
+          localTime = dt.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit" });
+        }
+        return {
+          id: d.id,
+          userId: v.userId,
+          name: v.name || "Unknown",
+          date: localDate,
+          time: localTime,
+          status: v.status || "Unknown",
+          checkin: v.checkin || "-",
+          checkout: v.checkout || "-",
+          address: v.address || "N/A",
+          latitude: v.latitude,
+          longitude: v.longitude,
+          locationStatus: v.locationStatus || "-",
+          workMode: v.workMode || "-"
+        };
+      });
+    }
+
+    function paintForDate(dateStr, searchTerm = "") {
+      const presentToday = ALL_ATTENDANCE.filter(r => r.date === dateStr);
+      const presentIds = new Set(presentToday.map(r => r.userId));
+      const absentStaff = ALL_STAFF.filter(s => !presentIds.has(s.id));
+      const q = (searchTerm || "").toLowerCase();
+      const visiblePresent = q ? presentToday.filter(r => r.name.toLowerCase().includes(q)) : presentToday;
+
+      attendanceTitle.textContent = `${formatDateForDisplay(dateStr)} Attendance`;
+      attendanceBody.innerHTML = "";
+      emptyState.style.display = "none";
+      absentListDiv.innerHTML = "";
+
+      if (visiblePresent.length === 0) {
+        emptyState.style.display = "block";
+      } else {
+        visiblePresent.forEach(record => {
+          const statusClass = record.status === "On Time" ? "status-green" : "status-late";
+          const workModeText = record.workMode === "wfh" ? "WFH" : "Office";
+          const workModeStyle = record.workMode === "wfh" 
+            ? "background:rgba(0,123,255,0.15);color:#007bff;" 
+            : "background:#f3e5f5;color:#7b1fa2;";
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${record.name}</td>
+            <td>${record.checkin}</td>
+            <td><span class="status ${statusClass}">${record.status}</span></td>
+            <td>${record.checkout || "-"}</td>
+            <td class="location">
+              <div class="location-icon location-office"><i class="fas fa-map-marker-alt"></i></div>
+              <span>${record.address}</span>
+            </td>
+            <td><span class="status" style="${workModeStyle}">${workModeText}</span></td>
+          `;
+          attendanceBody.appendChild(tr);
+        });
+      }
+
+      if (absentStaff.length > 0) {
+        absentListDiv.innerHTML = absentStaff
+          .map(s => `<div style="background:#ffebee;padding:8px 12px;margin-bottom:6px;border-radius:6px;font-weight:600;color:#c62828;"><i class="fas fa-user-times"></i> ${s.name}</div>`)
+          .join("");
+      } else {
+        absentListDiv.innerHTML = `<div style="color:#2e7d32;font-weight:600;padding:12px;background:#e8f5e9;border-radius:6px;"><i class="fas fa-check-circle"></i> All staff checked in!</div>`;
+      }
+    }
+
+    async function renderAttendanceFull() {
+      loadingOverlay.style.display = "flex";
+      try {
+        await loadAllStaffOnce();
+        await fetchAttendanceAll();
+        paintForDate(datePicker.value, staffSearch.value);
+      } catch (e) {
+        console.error("Render error:", e);
+        emptyState.style.display = "block";
+      } finally {
+        loadingOverlay.style.display = "none";
+      }
+    }
+
+    function renderNameSearch() {
+      paintForDate(datePicker.value, staffSearch.value);
+    }
+
+    downloadBtn.addEventListener("click", async () => {
+      if (!ALL_ATTENDANCE.length) await fetchAttendanceAll();
+      let csv = "Name,Date,CheckIn,CheckOut,Status,Location,WorkMode\n";
+      ALL_ATTENDANCE.forEach(r => {
+        csv += `"${r.name}","${r.date}","${r.checkin}","${r.checkout}","${r.status}","${r.address}","${r.workMode}"\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "attendance_log.csv";
+      a.click();
+    });
+
+    searchBtn.addEventListener("click", renderAttendanceFull);
+    let searchTimer = null;
+    staffSearch.addEventListener("input", () => {
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(renderNameSearch, 150);
+    });
+
+    // ✅ EXACTLY MATCHES LEAVE CALENDAR NAVIGATION
+    function renderNavigation(currentPage = '/admin-attendancelog') {
+      const nav = document.getElementById("navLinks");
+      if (!nav) return;
+
+      const pages = [
+        { name: "Dashboard", path: "/admin-dashboard", icon: "fa-home" },
+        { name: "Staff Management", path: "/manage-staff", icon: "fa-users" },
+        { name: "Staff Attendance Log", path: "/admin-attendancelog", icon: "fa-list" },
+        { name: "Staff Leave Requests", path: "/admin-leavecalendar", icon: "fa-calendar-alt" },
+        { name: "Staff Live Location", path: "/admin-liveloc", icon: "fa-location-dot" },
+        { name: "Admin Profile", path: "/profile", icon: "fa-user" }
+      ];
+
+      nav.innerHTML = pages.map(page => `
+        <a href="${page.path}" class="nav-item ${page.path === currentPage ? 'active' : ''}">
+          <i class="fas ${page.icon}"></i><span>${page.name}</span>
+        </a>
+      `).join('');
+
+      const logout = document.createElement('a');
+      logout.className = 'nav-item';
+      logout.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>Logout</span>';
+      logout.onclick = (e) => {
+        e.preventDefault();
+        signOut(auth).then(() => window.location.href = '/').catch(console.error);
+      };
+      nav.appendChild(logout);
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const firstName = data.firstName || "";
+          const lastName = data.lastName || "";
+          const email = data.email || user.email;
+
+          // ✅ EXACTLY MATCHES LEAVE CALENDAR INITIALS LOGIC
+          const initials = (firstName?.charAt(0) || '') + (lastName?.charAt(0) || '');
+          sidebarUserName.textContent = firstName || email.split('@')[0] || 'Admin';
+          sidebarUserEmail.textContent = email;
+          sidebarAvatar.textContent = initials || 'U';
+
+          renderNavigation('/admin-attendancelog');
+          await renderAttendanceFull();
+        }
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+  </script>
+</body>
+</html>
