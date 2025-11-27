@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Attendance System</title>
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100%;
+        }
+        
+        html {
+            height: 100%;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 600;
+        }
+
+        .header p {
+            margin: 6px 0 0 0;
+            opacity: 0.9;
+            font-size: 15px;
+        }
+
+        .attendance-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+        }
+
+        .status-display {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 22px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .status-checked-out {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-checked-in {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .current-time {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .current-date {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .location-info {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 18px;
+            margin: 18px 0;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .location-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .location-text {
+            color: #4b5563;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .check-in-btn {
+            background: #16a34a;
+            color: white;
+        }
+
+        .check-in-btn:hover:not(:disabled) {
+            background: #15803d;
+            transform: translateY(-2px);
+        }
+
+        .check-out-btn {
+            background: #22c55e; /* Green for Check Out */
+            color: white;
+        }
+
+        .check-out-btn:hover:not(:disabled) {
+            background: #16a34a;
+            transform: translateY(-2px);
+        }
+
+        .face-scan-btn {
+            background: #ff7a59; /* Orange like your screenshot */
+            color: white;
+        }
+
+        .face-scan-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .face-scan-btn:hover:not(:disabled) {
+            background: #f97316;
+            transform: translateY(-2px);
+        }
+
+        .attendance-log {
+            background: white;
+            border-radius: 20px;
+            padding: 22px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .log-title {
+            font-size: 19px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 18px;
+            text-align: center;
+        }
+
+        .log-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #f8fafc;
+        }
+
+        .log-action {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .log-check-in {
+            color: #16a34a;
+        }
+
+        .log-check-out {
+            color: #dc2626;
+        }
+
+        .log-face-scan {
+            color: #8b5cf6;
+        }
+
+        .log-time {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .error {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 14px;
+            border-radius: 10px;
+            margin: 14px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .attendance-card, .attendance-log {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📍 Staff Attendance</h1>
+            <p>Location & face-based check in/out</p>
+        </div>
+
+        <div class="attendance-card">
+            <div class="status-display">
+                <div id="statusBadge" class="status-badge status-checked-out">
+                    Checked Out
+                </div>
+                <div class="current-time" id="currentTime">--:--</div>
+                <div class="current-date" id="currentDate">Loading...</div>
+            </div>
+
+            <div id="locationInfo" class="location-info" style="display: none;">
+                <div class="location-title">
+                    📍 Current Location
+                </div>
+                <div class="location-text" id="locationText">
+                    Getting location...
+                </div>
+            </div>
+
+            <div id="errorMessage" class="error" style="display: none;"></div>
+
+            <!-- Check In / Check Out Button -->
+            <button id="actionButton" class="action-button check-in-btn" onclick="toggleAttendance()">
+                <span>🕗</span> Check In
+            </button>
+
+            <!-- ✅ SCAN FACE BUTTON — ORANGE, DISABLED AFTER ANY ACTIVITY -->
+            <button id="faceScanButton" class="action-button face-scan-btn" 
+                    onclick="scanFace()"
+                    title="Scan face for attendance verification">
+                <span>📷</span> Scan Face (In)
+            </button>
+        </div>
+
+        <div class="attendance-log">
+            <div class="log-title">📋 Today's Log</div>
+            <div id="attendanceLog">
+                <div class="loading">No entries yet today</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isCheckedIn = false;
+        let locationWatchId = null;
+        let attendanceLog = [];
+
+        // Get today's date string (YYYY-MM-DD)
+        function getTodayString() {
+            const now = new Date();
+            return now.toISOString().split('T')[0];
+        }
+
+        // ✅ Check if ANY attendance activity exists today (check-in, check-out, or face scan)
+        function hasActivityToday() {
+            const today = getTodayString();
+
+            // Check memory
+            const hasMemoryLog = attendanceLog.some(entry => 
+                entry.timestamp instanceof Date && 
+                entry.timestamp.toISOString().startsWith(today)
+            );
+
+            // Check localStorage
+            const storedLog = JSON.parse(localStorage.getItem('attendanceLog') || '[]');
+            const hasStoredLog = storedLog.some(item => item.date === today);
+
+            return hasMemoryLog || hasStoredLog;
+        }
+
+        // Persist today's log to localStorage
+        function persistLog() {
+            const today = getTodayString();
+            const todayEntries = attendanceLog
+                .filter(entry => entry.timestamp.toISOString().startsWith(today))
+                .map(entry => ({
+                    action: entry.action,
+                    time: entry.time,
+                    location: entry.location,
+                    date: today
+                }));
+
+            const storedLog = JSON.parse(localStorage.getItem('attendanceLog') || '[]');
+            const updatedLog = [
+                ...storedLog.filter(item => item.date !== today),
+                ...todayEntries
+            ];
+
+            localStorage.setItem('attendanceLog', JSON.stringify(updatedLog));
+        }
+
+        // Load today's log on init
+        function loadLog() {
+            const today = getTodayString();
+            const storedLog = JSON.parse(localStorage.getItem('attendanceLog') || '[]');
+            const todayEntries = storedLog.filter(item => item.date === today);
+
+            attendanceLog = todayEntries.map(item => ({
+                action: item.action,
+                time: item.time,
+                location: item.location,
+                timestamp: new Date()
+            }));
+        }
+
+        // 🔒 Update face scan button: disable if ANY activity today
+        function updateFaceScanButton() {
+            const faceBtn = document.getElementById('faceScanButton');
+            const hasActivity = hasActivityToday();
+
+            if (hasActivity) {
+                faceBtn.disabled = true;
+                faceBtn.title = "✅ Attendance already recorded today — face scan not allowed again";
+                faceBtn.innerHTML = '<span>🔒</span> Already Recorded';
+            } else {
+                faceBtn.disabled = false;
+                faceBtn.title = "Scan face for attendance verification (once per day)";
+                faceBtn.innerHTML = '<span>📷</span> Scan Face (In)';
+            }
+        }
+
+        // Update time display
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            const dateString = now.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            document.getElementById('currentTime').textContent = timeString;
+            document.getElementById('currentDate').textContent = dateString;
+        }
+
+        // Get location
+        function getCurrentLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error('Geolocation not supported'));
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude.toFixed(6);
+                        const lng = position.coords.longitude.toFixed(6);
+                        const accuracy = Math.round(position.coords.accuracy);
+                        resolve({ latitude: lat, longitude: lng, accuracy });
+                    },
+                    (error) => {
+                        let msg = 'Location error: ';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED: msg += 'Access denied'; break;
+                            case error.POSITION_UNAVAILABLE: msg += 'Unavailable'; break;
+                            case error.TIMEOUT: msg += 'Timed out'; break;
+                            default: msg += 'Unknown';
+                        }
+                        reject(new Error(msg));
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+                );
+            });
+        }
+
+        function startLocationTracking() {
+            if (!navigator.geolocation || locationWatchId !== null) return;
+
+            locationWatchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const lat = position.coords.latitude.toFixed(6);
+                    const lng = position.coords.longitude.toFixed(6);
+                    const accuracy = Math.round(position.coords.accuracy);
+                    const time = new Date().toLocaleTimeString();
+                    
+                    document.getElementById('locationText').innerHTML = `
+                        <strong>📍 Coordinates:</strong> ${lat}, ${lng}<br>
+                        <strong>🎯 Accuracy:</strong> ±${accuracy}m<br>
+                        <strong>🕒 Updated:</strong> ${time}
+                    `;
+                },
+                () => {},
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 }
+            );
+        }
+
+        function stopLocationTracking() {
+            if (locationWatchId !== null) {
+                navigator.geolocation.clearWatch(locationWatchId);
+                locationWatchId = null;
+            }
+        }
+
+        function showError(message) {
+            const el = document.getElementById('errorMessage');
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 5000);
+        }
+
+        // ✅ Add log entry + persist + update UI + refresh face button
+        function addLogEntry(action, location = 'N/A') {
+            const now = new Date();
+            attendanceLog.push({
+                action: action,
+                time: now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+                location: location,
+                timestamp: now
+            });
+            updateLogDisplay();
+            persistLog();
+            updateFaceScanButton(); // ← Critical: disable face scan after any log
+        }
+
+        function updateLogDisplay() {
+            const container = document.getElementById('attendanceLog');
+            if (attendanceLog.length === 0) {
+                container.innerHTML = '<div class="loading">No entries yet today</div>';
+                return;
+            }
+
+            container.innerHTML = attendanceLog.map(entry => {
+                let icon = '🕗', cls = '';
+                if (entry.action === 'Check In') {
+                    icon = '🟢'; cls = 'log-check-in';
+                } else if (entry.action === 'Check Out') {
+                    icon = '🔴'; cls = 'log-check-out';
+                } else if (entry.action === 'Face Scan') {
+                    icon = '📷'; cls = 'log-face-scan';
+                }
+
+                return `
+                    <div class="log-entry">
+                        <div class="log-action ${cls}">${icon} ${entry.action}</div>
+                        <div class="log-time">${entry.time}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function toggleAttendance() {
+            const btn = document.getElementById('actionButton');
+            const badge = document.getElementById('statusBadge');
+            const locInfo = document.getElementById('locationInfo');
+            
+            btn.disabled = true;
+            btn.innerHTML = isCheckedIn 
+                ? '<span>🔴</span> Checking Out...' 
+                : '<span>🟢</span> Checking In...';
+
+            try {
+                const loc = await getCurrentLocation();
+
+                if (!isCheckedIn) {
+                    // ✅ Check In
+                    isCheckedIn = true;
+                    badge.textContent = 'Checked In';
+                    badge.className = 'status-badge status-checked-in';
+                    btn.innerHTML = '<span>✅</span> Check Out';
+                    btn.className = 'action-button check-out-btn';
+                    
+                    locInfo.style.display = 'block';
+                    document.getElementById('locationText').innerHTML = `
+                        <strong>📍 Coordinates:</strong> ${loc.latitude}, ${loc.longitude}<br>
+                        <strong>🎯 Accuracy:</strong> ±${loc.accuracy}m<br>
+                        <strong>🟢 Tracking:</strong> Active
+                    `;
+                    
+                    startLocationTracking();
+                    addLogEntry('Check In', `${loc.latitude}, ${loc.longitude}`);
+                    
+                } else {
+                    // 🔴 Check Out
+                    stopLocationTracking();
+                    isCheckedIn = false;
+                    badge.textContent = 'Checked Out';
+                    badge.className = 'status-badge status-checked-out';
+                    btn.innerHTML = '<span>🕗</span> Check In';
+                    btn.className = 'action-button check-in-btn';
+                    locInfo.style.display = 'none';
+                    
+                    addLogEntry('Check Out', `${loc.latitude}, ${loc.longitude}`);
+                }
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                btn.disabled = false;
+                updateFaceScanButton(); // ← Extra safety: force refresh
+            }
+        }
+
+        async function scanFace() {
+            const btn = document.getElementById('faceScanButton');
+            if (btn.disabled || hasActivityToday()) {
+                alert("⚠️ Attendance already recorded today.\nFace scan is only allowed once per day.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span>🔍</span> Scanning...';
+
+            try {
+                // Simulate real face scan (1.5 sec)
+                await new Promise(r => setTimeout(r, 1500));
+
+                // Final gate: re-check activity (race condition safety)
+                if (hasActivityToday()) {
+                    throw new Error('Already recorded');
+                }
+
+                addLogEntry('Face Scan', 'Verified via facial recognition');
+                alert('✅ Face scan successful!\nAttendance recorded for today.');
+                
+            } catch (error) {
+                showError('Face scan failed: ' + (error.message || 'Camera error'));
+            } finally {
+                updateFaceScanButton();
+            }
+        }
+
+        // Initialize on load
+        function init() {
+            loadLog(); // ← Load persisted data
+            updateTime();
+            setInterval(updateTime, 1000);
+            updateLogDisplay();
+            updateFaceScanButton(); // ← Initial state: disabled if activity exists
+
+            // Midnight auto-reset guard
+            setInterval(() => {
+                const now = new Date();
+                if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
+                    updateFaceScanButton();
+                }
+            }, 1000);
+        }
+
+        document.readyState === 'loading' 
+            ? document.addEventListener('DOMContentLoaded', init) 
+            : init();
+    </script>
+</body>
+</html>
